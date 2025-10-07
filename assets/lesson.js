@@ -141,6 +141,14 @@
       }
     });
 
+    // User control: when paused, stop auto-advance; when resumed, re-schedule
+    audio.addEventListener('pause', () => {
+      clearAdvance();
+    });
+    audio.addEventListener('play', () => {
+      scheduleAdvance();
+    });
+
     NCE_APP.initSegmented(document);
 
     loadLrc(lrc).then(({meta,items:arr})=>{

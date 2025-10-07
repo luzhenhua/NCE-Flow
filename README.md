@@ -54,42 +54,12 @@ python3 -m http.server 8080
 
 > 播放端自动识别两种格式；连续播放的分段时长会自动兜底（避免极短句抖动）。
 
-## 🛠 批量翻译 LRC（可选）
-
-脚本：`translate_lrc.py`，基于 SiliconFlow Chat Completions（默认模型：`tencent/Hunyuan-MT-7B`）。
-
-示例：
-
-```
-# 原地写回（inline：行内英文|中文，带备份 .bak）
-export SILICONFLOW_API_KEY=your_key
-python translate_lrc.py \
-  --input-dirs NCE1 NCE2 NCE3 NCE4 \
-  --in-place --backup --batch-size 12 --concurrency 4
-
-# 生成到新目录（双行堆叠 stacked）
-python translate_lrc.py \
-  --input-dirs NCE1 --output-dir out_lrc --mode stacked \
-  --batch-size 12 --concurrency 4
-
-# 限速（L0 默认：RPM=1000, TPM=80000）与修复策略
-python translate_lrc.py ... --rpm-limit 1000 --tpm-limit 80000 --fix-retries 2 --verbose
-```
-
-特性：
-
-- 保留时间戳与原顺序；逐句独立翻译（不合并不拆分）
-- 结果校验与重试（避免回显英文/空译文）
-- 速率限制器（RPM/TPM 滑动窗口），并支持并发/分块
-
-> 注意：请自行确认音频与文本的版权与使用范围；本脚本仅用于学习研究。
 
 ## 🙏 致谢
 
 - 原项目与灵感来源：iChochy/NCE（https://github.com/iChochy/NCE）
-- 资源参考：tangx/New-Concept-English（https://github.com/tangx/New-Concept-English）
 
-在此对原作者和社区表达感谢；本项目仅在前人工作的基础上进行了界面与交互层的现代化重构：
+  在此对原作者和社区表达感谢。
 
 - 首页整合书目与课程列表；
 - 课文页支持 EN/EN+CN/CN 三态语言视图；
@@ -99,11 +69,6 @@ python translate_lrc.py ... --rpm-limit 1000 --tpm-limit 80000 --fix-retries 2 -
 ## 📄 协议
 
 本仓库代码遵循仓库内 LICENSE 文件所述协议。音频与文本内容版权归原权利人所有，仅用于学习研究，请勿转载或商用。
-
----
-
-Designed & Maintained by Luzhenhua · https://luzhenhua.cn
-Open Source: https://github.com/luzhenhua/NCE-Flow
 
 ---
 
