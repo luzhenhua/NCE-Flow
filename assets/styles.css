@@ -54,6 +54,10 @@ body::before{
 .hero .subtitle{margin-top:6px;margin-bottom:10px;font-size:13px;color:var(--muted);letter-spacing:0.02em}
 /* badges removed per design feedback */
 
+/* Back button inline with player */
+.back-inline{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow);color:inherit;flex:0 0 auto;}
+.back-inline svg{width:14px;height:14px;fill:currentColor}
+
 /* Segmented control */
 .segmented{display:inline-flex;gap:6px;background:color-mix(in srgb, var(--bg) 70%, transparent);border:1px solid var(--border);border-radius:999px;padding:4px;margin-top:14px;backdrop-filter:saturate(120%) blur(10px)}
 .segmented .seg{appearance:none;border:0;background:transparent;color:var(--text);font-size:12px;padding:8px 12px;border-radius:999px;cursor:pointer;text-decoration:none;transition:background .15s ease, color .15s ease}
@@ -107,9 +111,8 @@ body::before{
 .lang-cn .en{display:none}
 
 /* Audio */
-.player{display:flex; justify-content:center; margin:6px auto 10px; padding:0; 
-  background:transparent; border:none; box-shadow:none;}
-.player audio{display:block; width:100%; max-width:780px; height:34px; accent-color: var(--accent); background: transparent;}
+.player{display:flex; align-items:center; gap:8px; margin:6px auto 10px; padding:0; background:transparent; border:none; box-shadow:none;}
+.player audio{display:block; flex:1; width:100%; max-width:780px; height:34px; accent-color: var(--accent); background: transparent;}
 
 /* Footer */
 footer{padding:20px 0;color:var(--muted);text-align:center}

@@ -63,6 +63,7 @@
     const subEl = qs('#lessonSub');
     const listEl = qs('#sentences');
     const audio = qs('#player');
+    const backLink = qs('#backLink');
 
     let items = [];
     let idx = -1;
@@ -70,6 +71,19 @@
     let segmentTimer = 0; // timeout id for auto-advance
 
     audio.src = mp3;
+    // Back navigation: prefer history, fallback to index with current book
+    if(backLink){
+      const fallback = `index.html#${book}`;
+      backLink.setAttribute('href', fallback);
+      backLink.addEventListener('click', (e)=>{
+        e.preventDefault();
+        try{
+          const ref = document.referrer;
+          if(ref && new URL(ref).origin === location.origin){ history.back(); return; }
+        }catch(_){}
+        location.href = fallback;
+      });
+    }
 
     function render(){
       listEl.innerHTML = items.map((it, i)=>`
