@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>跳转中…</title>
+</head>
+<body>
+  <script>
+    // 兼容历史链接：book.html#NCEx → index.html#NCEx
+    location.replace('index.html' + (location.hash || '#NCE1'));
+  </script>
+  <noscript>
+    <p>请前往 <a href="index.html#NCE1">首页</a></p>
+  </noscript>
+</body>
+</html>
