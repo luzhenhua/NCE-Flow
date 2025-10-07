@@ -50,6 +50,9 @@
   function qs(sel){ return document.querySelector(sel); }
 
   document.addEventListener('DOMContentLoaded',()=>{
+    // Ensure new lesson loads at top (avoid scroll restoration)
+    try { if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } } catch(_){}
+    window.scrollTo(0, 0);
     const hash = decodeURIComponent(location.hash.slice(1));
     if(!hash){ location.href = 'book.html'; return; }
     const [book, ...rest] = hash.split('/');
@@ -64,11 +67,15 @@
     const listEl = qs('#sentences');
     const audio = qs('#player');
     const backLink = qs('#backLink');
+    const prevLessonLink = qs('#prevLesson');
+    const nextLessonLink = qs('#nextLesson');
 
     let items = [];
     let idx = -1;
     let segmentEnd = 0; // current sentence end time
     let segmentTimer = 0; // timeout id for auto-advance
+    let prevLessonHref = '';
+    let nextLessonHref = '';
 
     audio.src = mp3;
     // Back navigation: prefer history, fallback to index with current book
@@ -111,6 +118,7 @@
           if(idx+1 < items.length){
             playSegment(idx+1);
           } else {
+            // last sentence of lesson: stop here
             audio.pause();
           }
         }, ms);
@@ -123,7 +131,8 @@
       const it = items[i];
       audio.currentTime = Math.max(0, it.start);
       segmentEnd = computeEnd(it);
-      audio.play();
+      const p = audio.play();
+      if(p && p.catch){ p.catch(()=>{}); }
       highlight(i);
       scheduleAdvance();
     }
@@ -163,13 +172,51 @@
       scheduleAdvance();
     });
 
+    // Handle lesson change via hash navigation (prev/next buttons)
+    window.addEventListener('hashchange', () => {
+      // Scroll to top then reload to re-init content
+      window.scrollTo(0, 0);
+      location.reload();
+    });
+
+    // Resolve neighbors and wire bottom nav
+    async function resolveLessonNeighbors(){
+      try{
+        const num = parseInt(book.replace('NCE','')) || 1;
+        const res = await fetch(prefix + 'static/data.json');
+        const data = await res.json();
+        const lessons = data[num] || [];
+        const i = lessons.findIndex(x => x.filename === base);
+        if(i > 0){
+          const prev = lessons[i-1].filename;
+          prevLessonHref = `lesson.html#${book}/${prev}`;
+          if(prevLessonLink){ prevLessonLink.href = prevLessonHref; prevLessonLink.style.display = ''; }
+        }else{
+          if(prevLessonLink){ prevLessonLink.style.display = 'none'; }
+        }
+        if(i >= 0 && i+1 < lessons.length){
+          const next = lessons[i+1].filename;
+          nextLessonHref = `lesson.html#${book}/${next}`;
+          if(nextLessonLink){ nextLessonLink.href = nextLessonHref; nextLessonLink.style.display = ''; }
+        }else{
+          if(nextLessonLink){ nextLessonLink.style.display = 'none'; }
+        }
+      }catch(_){
+        if(prevLessonLink) prevLessonLink.style.display = 'none';
+        if(nextLessonLink) nextLessonLink.style.display = 'none';
+      }
+    }
+
     NCE_APP.initSegmented(document);
+
+    resolveLessonNeighbors();
 
     loadLrc(lrc).then(({meta,items:arr})=>{
       items = arr;
       titleEl.textContent = meta.ti || base;
       subEl.textContent = `${meta.al || book} · ${meta.ar||''}`.trim();
       render();
+      // Autoplay parameter is ignored by default; user taps to play
     }).catch(err=>{
       titleEl.textContent = '无法加载课文';
       subEl.textContent = String(err);
