@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # NCE Flow Docker 镜像构建和推送脚本
+# 与 GitHub Actions 保持一致：使用 Buildx 构建 amd64/arm64 并直接推送。
+# 运行前请先执行 docker login，脚本会优先使用当前已登录的 Docker Hub 账号。
 # 使用方法: ./build-and-push.sh <version>
 # 例如: ./build-and-push.sh 1.6.0
 
-set -e
+set -euo pipefail
 
 # 颜色输出
 RED='\033[0;31m'
@@ -12,52 +14,83 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 检查参数
-if [ -z "$1" ]; then
+usage() {
     echo -e "${RED}错误: 请提供版本号${NC}"
     echo "使用方法: $0 <version>"
     echo "例如: $0 1.6.0"
+}
+
+require_command() {
+    local cmd=$1
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo -e "${RED}错误: 未找到命令 '$cmd'${NC}"
+        exit 1
+    fi
+}
+
+get_logged_in_username() {
+    docker info 2>/dev/null | sed -n 's/^ Username: //p' | head -n1
+}
+
+if [ $# -lt 1 ] || [ -z "${1:-}" ]; then
+    usage
     exit 1
 fi
 
 VERSION=$1
-DOCKER_USERNAME="luzhenhua"  # 修改为你的 Docker Hub 用户名
-IMAGE_NAME="nce-flow"
-FULL_IMAGE_NAME="${DOCKER_USERNAME}/${IMAGE_NAME}"
+IMAGE_NAME=${IMAGE_NAME:-nce-flow}
+PLATFORMS=${PLATFORMS:-linux/amd64,linux/arm64}
+BUILDER_NAME=${BUILDER_NAME:-nce-flow-multiarch}
 
-echo -e "${GREEN}开始构建 NCE Flow Docker 镜像...${NC}"
-echo "版本: ${VERSION}"
-echo "镜像名称: ${FULL_IMAGE_NAME}"
-echo ""
+require_command docker
 
-# 检查是否已登录 Docker Hub
-echo -e "${YELLOW}检查 Docker Hub 登录状态...${NC}"
-if ! docker info | grep -q "Username"; then
-    echo -e "${YELLOW}请先登录 Docker Hub:${NC}"
-    docker login
-fi
-
-# 构建镜像
-echo -e "${GREEN}步骤 1/3: 构建 Docker 镜像...${NC}"
-docker build -t ${FULL_IMAGE_NAME}:${VERSION} \
-             -t ${FULL_IMAGE_NAME}:latest \
-             --platform linux/amd64,linux/arm64 \
-             .
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}构建失败！${NC}"
+if ! docker info >/dev/null 2>&1; then
+    echo -e "${RED}错误: Docker daemon 不可用，请先启动 Docker。${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}构建成功！${NC}"
+if ! docker buildx version >/dev/null 2>&1; then
+    echo -e "${RED}错误: 当前 Docker 未启用 buildx，请先安装或启用 Docker Buildx。${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}开始构建并推送 NCE Flow Docker 镜像...${NC}"
+echo "版本: ${VERSION}"
+echo "平台: ${PLATFORMS}"
 echo ""
 
-# 推送镜像
-echo -e "${GREEN}步骤 2/3: 推送版本标签 (${VERSION})...${NC}"
-docker push ${FULL_IMAGE_NAME}:${VERSION}
+echo -e "${YELLOW}检查 Docker Hub 登录状态...${NC}"
+if ! docker info 2>/dev/null | grep -q "Username:"; then
+    echo -e "${YELLOW}未检测到 Docker Hub 登录状态，执行 docker login...${NC}"
+    docker login
+fi
 
-echo -e "${GREEN}步骤 3/3: 推送 latest 标签...${NC}"
-docker push ${FULL_IMAGE_NAME}:latest
+DOCKER_USERNAME=${DOCKER_USERNAME:-$(get_logged_in_username)}
+if [ -z "${DOCKER_USERNAME}" ]; then
+    echo -e "${RED}错误: 无法识别当前 Docker Hub 用户名。${NC}"
+    echo "请先执行 docker login，或显式设置环境变量 DOCKER_USERNAME。"
+    exit 1
+fi
+
+FULL_IMAGE_NAME="${DOCKER_USERNAME}/${IMAGE_NAME}"
+
+echo "镜像名称: ${FULL_IMAGE_NAME}"
+
+echo -e "${YELLOW}准备 buildx builder...${NC}"
+if ! docker buildx inspect "${BUILDER_NAME}" >/dev/null 2>&1; then
+    docker buildx create --name "${BUILDER_NAME}" --use
+else
+    docker buildx use "${BUILDER_NAME}"
+fi
+docker buildx inspect --bootstrap >/dev/null
+
+echo -e "${GREEN}步骤 1/1: Buildx 多架构构建并推送...${NC}"
+docker buildx build \
+    --platform "${PLATFORMS}" \
+    --tag "${FULL_IMAGE_NAME}:${VERSION}" \
+    --tag "${FULL_IMAGE_NAME}:latest" \
+    --push \
+    .
 
 echo ""
 echo -e "${GREEN}✓ 镜像发布成功！${NC}"
