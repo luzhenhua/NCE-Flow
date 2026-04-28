@@ -12,6 +12,18 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <title>关于 · NCE Flow</title>
+  <script>
+    (function () {
+      try {
+        const theme = localStorage.getItem('nce_theme') ||
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const root = document.documentElement;
+        root.classList.add(theme + '-theme');
+        root.style.colorScheme = theme;
+        root.style.backgroundColor = theme === 'dark' ? '#09090b' : '#ffffff';
+      } catch (_) { }
+    })();
+  </script>
   <link rel="stylesheet" href="assets/styles.css">
 
   <!--  Microsoft Clarity 统计代码 -->
