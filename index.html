@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <title>NCE Flow - 新概念英语在线点读 · 第一至四册课文听力跟读</title>
-  <meta name="description" content="免费的新概念英语（NCE）在线学习工具，覆盖第一至四册全部课文，支持点句即读、连续播放、单句循环、跟读与收藏，高效练习听力与口语。">
+  <meta name="description" content="NCE Flow 免费提供新概念英语第一册至第四册在线点读学习，可按册别和课次查找课文。每课包含英文原文和中英对照，支持逐句点读、连续播放、单句循环、在线跟读、听力练习、收藏与学习记录，适合课前预习、课后复习、听力和口语训练。">
   <meta name="keywords" content="新概念英语,NCE,新概念英语在线,点读,课文,听力,跟读,第一册,第二册,第三册,第四册">
   <link rel="canonical" href="https://nce.luzhenhua.cn/">
   <meta property="og:type" content="website">
@@ -33,7 +33,7 @@
     "name": "NCE Flow",
     "alternateName": "新概念英语在线点读",
     "url": "https://nce.luzhenhua.cn/",
-    "description": "免费的新概念英语在线学习工具，覆盖第一至四册全部课文，支持点句即读、连续播放、跟读与收藏。",
+    "description": "NCE Flow 免费提供新概念英语第一册至第四册在线点读学习，可按册别和课次查找课文。每课包含英文原文和中英对照，支持逐句点读、连续播放、单句循环、在线跟读、听力练习、收藏与学习记录。",
     "inLanguage": "zh-CN"
   }
   </script>
@@ -178,6 +178,15 @@
       let lessonsData = null;
       const getBook = () => (location.hash.slice(1) || 'NCE1').replace(/[^\w\d]/g, '');
       function activeTab(book) { segBooks.forEach(b => b.classList.toggle('active', b.dataset.book === book)); }
+      segBooks.forEach(link => {
+        link.addEventListener('click', (event) => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          const book = link.dataset.book;
+          if (location.hash === `#${book}`) load();
+          else location.hash = book;
+        });
+      });
       async function load() {
         if (lessonsData) {
           render(lessonsData);
@@ -336,10 +345,10 @@
       <p class="subtitle">简约 · 高效 · 专注</p>
       <div class="seg-wrap">
         <div class="segmented tabs" role="tablist" aria-label="册别">
-          <a class="seg" href="#NCE1" data-book="NCE1">第一册</a>
-          <a class="seg" href="#NCE2" data-book="NCE2">第二册</a>
-          <a class="seg" href="#NCE3" data-book="NCE3">第三册</a>
-          <a class="seg" href="#NCE4" data-book="NCE4">第四册</a>
+          <a class="seg" href="/NCE1/" data-book="NCE1">第一册</a>
+          <a class="seg" href="/NCE2/" data-book="NCE2">第二册</a>
+          <a class="seg" href="/NCE3/" data-book="NCE3">第三册</a>
+          <a class="seg" href="/NCE4/" data-book="NCE4">第四册</a>
           <a class="seg" href="favorites.html" id="favoritesLinkHome">清单</a>
         </div>
       </div>
