@@ -690,6 +690,7 @@
     // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        const hadController = Boolean(navigator.serviceWorker.controller);
         navigator.serviceWorker.register('sw.js')
           .then((reg) => {
             console.log('[PWA] Service Worker 注册成功');
@@ -711,7 +712,7 @@
 
             // Show update notification instead of auto-refresh
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-              showUpdateNotification();
+              if (hadController) showUpdateNotification();
             });
           })
           .catch(err => console.log('[PWA] Service Worker 注册失败:', err));

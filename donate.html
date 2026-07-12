@@ -225,6 +225,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        const hadController = Boolean(navigator.serviceWorker.controller);
         navigator.serviceWorker.register('/sw.js')
           .then(reg => {
             reg.update();
@@ -245,6 +246,7 @@
 
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (!hadController) return;
               if (refreshing) return;
               refreshing = true;
               window.location.reload();
