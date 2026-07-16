@@ -1,0 +1,36 @@
+# Git 相关
+.git
+.gitignore
+.gitattributes
+
+# Docker 相关
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 文档和开发文件
+README.md
+*.md
+LICENSE
+
+# 临时文件和缓存
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.vscode
+.idea
+
+# 打包文件
+*.tar.gz
+*.zip
+
+# Node.js (如果将来使用)
+node_modules
+npm-debug.log
+package-lock.json
+yarn.lock
+
+# 其他不需要的文件
+.env
+.env.local

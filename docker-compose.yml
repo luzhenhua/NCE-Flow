@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  echo-flow:
+    build: .
+    container_name: echo-flow
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      # 服务端数据持久化与多设备同步：挂载后用户数据自动存到宿主 ./data，清缓存不丢失
+      - ./data:/app/data
+    # 可选：设置访问令牌后，需在应用「设置」中填入同一令牌才能同步
+    # environment:
+    #   - NCE_DATA_TOKEN=change-me
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - echo-network
+
+networks:
+  echo-network:
+    driver: bridge

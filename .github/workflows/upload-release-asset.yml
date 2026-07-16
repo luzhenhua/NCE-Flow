@@ -1,0 +1,39 @@
+name: Upload Release Asset
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.5.0)"
+        required: true
+        default: "v1.5.0"
+      version:
+        description: "Archive version (e.g. 1.5.0)"
+        required: true
+        default: "1.5.0"
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build tarball
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag }}"
+          VER="${{ inputs.version }}"
+          git archive --format=tar.gz --prefix="echo-flow-${VER}/" "${TAG}" -o "${VER}.tar.gz"
+          ls -lh "${VER}.tar.gz"
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: ${{ inputs.version }}.tar.gz

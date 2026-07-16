@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="EchoFlow">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>支持与捐助 · EchoFlow</title>
+  <link rel="stylesheet" href="assets/styles.css">
+
+  <!-- Microsoft Clarity 统计代码 -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "tvjv632zgs");
+  </script>
+
+  <!-- 主题切换 -->
+  <script>
+    (function() {
+      if (!window.matchMedia) return;
+
+      const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = function(isDark) {
+        if (!document.body) return;
+        document.body.classList.remove('dark-theme', 'light-theme');
+        document.body.classList.add(isDark ? 'dark-theme' : 'light-theme');
+
+        const originalDisplay = document.body.style.display;
+        document.body.style.display = 'none';
+        void document.body.offsetHeight;
+        document.body.style.display = originalDisplay;
+
+        document.body.style.transform = 'translateZ(0)';
+        setTimeout(() => {
+          document.body.style.transform = '';
+        }, 0);
+      };
+
+      const handleChange = e => applyTheme(e.matches);
+
+      if (colorSchemeQuery.addEventListener) {
+        colorSchemeQuery.addEventListener('change', handleChange);
+      } else {
+        colorSchemeQuery.addListener(handleChange);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          applyTheme(colorSchemeQuery.matches);
+        });
+      } else {
+        applyTheme(colorSchemeQuery.matches);
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="donate-container">
+    <header class="donate-header">
+      <h1>支持与赞助</h1>
+      <p class="subtitle">Support EchoFlow</p>
+    </header>
+
+    <main>
+      <div class="donate-card">
+        <div class="donate-message">
+          <p>我是 EchoFlow 的开发者，目前还是一名在校学生。</p>
+          <p>搭建这个工具的初衷很简单：希望能有一个纯粹、流畅、无干扰的点读跟读练习工具。看到大家能在这里有所收获，就是我最大的动力。</p>
+          <p>虽然维持网站的访问速度需要承担一些服务器与 CDN 费用，但请 <b>务必在您经济宽裕的前提下</b> 再考虑赞助。如果暂时不方便也完全没关系，只要 EchoFlow 能为您原本枯燥的学习过程带来一丝便捷与愉悦，这便是我最大的满足。</p>
+        </div>
+
+        <div class="donate-qr-section">
+          <p class="donate-scan-msg">请使用微信扫描下方二维码</p>
+          <div class="qr-frame">
+            <img src="images/2.jpg" alt="微信赞助二维码">
+          </div>
+          <div class="donate-hint">
+            您在打赏时的备注将作为昵称<br>展示在下方的捐助名单中
+          </div>
+          <p class="donate-footer-note">量力而行 · 感谢陪伴</p>
+        </div>
+
+        <div class="donate-divider"></div>
+
+        <div class="donor-list-section">
+          <div class="donor-list-header">
+            <h2 class="donor-list-title">捐助名单</h2>
+          </div>
+          <div class="donate-sort-row">
+            <div class="segmented tiny donate-sort" role="tablist" aria-label="排序">
+              <button class="seg active" type="button" data-sort="time" aria-pressed="true">时间</button>
+              <button class="seg" type="button" data-sort="amount" aria-pressed="false">金额</button>
+            </div>
+          </div>
+
+          <div class="donate-table-wrap">
+            <table class="donate-table">
+              <thead>
+                <tr>
+                  <th>昵称</th>
+                  <th>金额</th>
+                  <th>日期</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 新增的赞助记录 -->
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥9.00</td>
+                  <td class="donate-date">2026-07-12</td>
+                </tr>
+                                                                                                 <tr>
+  <td>Jiabo Xu / Brook Ltd,</td>
+  <td class="donate-amount">¥8.88</td>
+  <td class="donate-date">2026-07-07</td>
+</tr>
+                                                                                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥50.00</td>
+  <td class="donate-date">2026-07-05</td>
+</tr>
+                                                                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥50.00</td>
+  <td class="donate-date">2026-06-30</td>
+</tr>
+                                                                                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥8.88</td>
+  <td class="donate-date">2026-06-28</td>
+</tr>
+                                                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥50.00</td>
+  <td class="donate-date">2026-06-27</td>
+</tr>
+                                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥10.00</td>
+  <td class="donate-date">2026-06-25</td>
+</tr>
+                 <tr>
+                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥1.11</td>
+  <td class="donate-date">2026-06-23</td>
+</tr>
+                 <tr>
+  <td>匿名的好心人</td>
+  <td class="donate-amount">¥5.00</td>
+  <td class="donate-date">2026-06-23</td>
+</tr>
+                <tr>
+  <td>金石</td>
+  <td class="donate-amount">¥6.66</td>
+  <td class="donate-date">2026-06-22</td>
+</tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥8.88</td>
+                  <td class="donate-date">2025-12-24</td>
+                </tr>
+                <tr>
+                  <td>霍丁</td>
+                  <td class="donate-amount">¥1.00</td>
+                  <td class="donate-date">2025-12-24</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥8.88</td>
+                  <td class="donate-date">2025-12-23</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥6.88</td>
+                  <td class="donate-date">2025-12-22</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥200.00</td>
+                  <td class="donate-date">2025-12-21</td>
+                </tr>
+
+                <tr>
+                  <td>王多鱼</td>
+                  <td class="donate-amount">¥0.30</td>
+                  <td class="donate-date">2025-12-19</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥3.00</td>
+                  <td class="donate-date">2025-12-17</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥2.50</td>
+                  <td class="donate-date">2025-12-17</td>
+                </tr>
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥1.00</td>
+                  <td class="donate-date">2025-12-16</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-actions" style="margin-top: 48px;">
+        <a class="btn" href="/" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
+      </div>
+    </main>
+
+    <footer style="margin-top: 60px; text-align: center; color: var(--muted); opacity: 0.6; font-size: 0.8rem;">
+      <p class="version">EchoFlow · Designed for Learners</p>
+    </footer>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => {
+            reg.update();
+
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (!hadController) return;
+              if (refreshing) return;
+              refreshing = true;
+              window.location.reload();
+            });
+          })
+          .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
+      });
+    }
+  </script>
+
+  <script>
+    (function(){
+      const table = document.querySelector('.donate-table');
+      const tabs = document.querySelectorAll('.donate-sort [data-sort]');
+      const tbody = table?.querySelector('tbody');
+      if (!table || !tbody || !tabs.length) return;
+
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const getAmount = (tr) => {
+        const t = tr.querySelector('.donate-amount')?.textContent || '';
+        const n = parseFloat(t.replace(/[^\d.]/g, ''));
+        return Number.isFinite(n) ? n : 0;
+      };
+      const getDate = (tr) => {
+        const t = tr.querySelector('.donate-date')?.textContent || '';
+        const ts = Date.parse(t);
+        return Number.isFinite(ts) ? ts : 0;
+      };
+
+      rows.forEach((tr, i) => {
+        tr.dataset.amount = String(getAmount(tr));
+        tr.dataset.date = String(getDate(tr));
+        tr.dataset.idx = String(i);
+      });
+
+      const sortAndRender = (mode) => {
+        const sorted = rows.slice().sort((a, b) => {
+          const ad = parseFloat(a.dataset.date || '0') || 0;
+          const bd = parseFloat(b.dataset.date || '0') || 0;
+          const aa = parseFloat(a.dataset.amount || '0') || 0;
+          const ba = parseFloat(b.dataset.amount || '0') || 0;
+          const ai = parseInt(a.dataset.idx || '0', 10) || 0;
+          const bi = parseInt(b.dataset.idx || '0', 10) || 0;
+
+          if (mode === 'amount') {
+            if (ba !== aa) return ba - aa;
+            if (bd !== ad) return bd - ad;
+            return ai - bi;
+          }
+          // time (default): newest first
+          if (bd !== ad) return bd - ad;
+          if (ba !== aa) return ba - aa;
+          return ai - bi;
+        });
+        sorted.forEach(tr => tbody.appendChild(tr));
+      };
+
+      const setActive = (mode) => {
+        tabs.forEach(btn => {
+          const on = btn.dataset.sort === mode;
+          btn.classList.toggle('active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      };
+
+      // Default: time desc
+      sortAndRender('time');
+      setActive('time');
+
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.sort === 'amount' ? 'amount' : 'time';
+          sortAndRender(mode);
+          setActive(mode);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

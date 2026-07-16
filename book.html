@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>跳转中…</title>
+</head>
+<body>
+  <script>
+    // 兼容历史链接：book.html → index.html
+    location.replace('index.html' + (location.hash || ''));
+  </script>
+  <noscript>
+    <p>请前往 <a href="index.html">首页</a></p>
+  </noscript>
+</body>
+</html>

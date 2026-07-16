@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="EchoFlow">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>EchoFlow - 点读跟读练习工具（自备 mp3+lrc）</title>
+  <meta name="description" content="EchoFlow 是一款本地优先的点读与跟读练习工具。导入你合法拥有的 mp3 音频与 lrc 字幕，即可逐句点读、连续播放、单句循环、听力跟读，并记录收藏与学习进度。文件只保存在本机浏览器，不上传服务器。">
+  <meta name="keywords" content="点读工具,lrc同步,听力跟读,音频点读,mp3 lrc 播放器,语言学习工具,本地优先">
+  <link rel="canonical" href="https://echoflow.zhenhua.lu/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EchoFlow">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="EchoFlow - 点读跟读练习工具（自备资源）">
+  <meta property="og:description" content="导入你自己的 mp3+lrc，即可逐句点读、连续播放、单句循环与听力跟读。本工具不提供任何教材内容。">
+  <meta property="og:url" content="https://echoflow.zhenhua.lu/">
+  <meta property="og:image" content="https://echoflow.zhenhua.lu/icons/icon-512x512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="EchoFlow - 点读跟读练习工具（自备资源）">
+  <meta name="twitter:description" content="导入你自己的 mp3+lrc，逐句点读与听力跟读。本工具不提供任何教材内容。">
+  <meta name="twitter:image" content="https://echoflow.zhenhua.lu/icons/icon-512x512.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "EchoFlow",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "url": "https://echoflow.zhenhua.lu/",
+    "description": "本地优先的点读与跟读练习工具。不提供任何教材音频或课文，用户自行导入合法拥有的 mp3+lrc 资源，在本机浏览器进行逐句点读、连续播放、单句循环与听力跟读。",
+    "inLanguage": "zh-CN"
+  }
+  </script>
+  <script>
+    (function () {
+      try {
+        const theme = localStorage.getItem('nce_theme') ||
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const root = document.documentElement;
+        root.classList.add(theme + '-theme');
+        root.style.colorScheme = theme;
+        root.style.backgroundColor = theme === 'dark' ? '#09090b' : '#ffffff';
+      } catch (_) { }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/styles.css">
+
+  <!--  Microsoft Clarity 统计代码 -->
+  <script type="text/javascript">
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "tvjv632zgs");
+  </script>
+  <!--  Microsoft Clarity 代码结束 -->
+
+  <script src="assets/utils.js" defer></script>
+  <script src="assets/app.js" defer></script>
+  <script src="assets/search.js" defer></script>
+  <script src="assets/storage.js" defer></script>
+  <script src="assets/resource-store.js" defer></script>
+  <script src="assets/resources.js" defer></script>
+
+  <!-- 主题切换逻辑 -->
+  <script>
+    (function () {
+      const THEME_KEY = 'nce_theme';
+      
+      // Icons
+      const SUN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      const MOON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+
+      function getPreferredTheme() {
+        const saved = localStorage.getItem(THEME_KEY);
+        if (saved) return saved;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        const scrollX = window.scrollX || 0;
+        const scrollY = window.scrollY || 0;
+        root.classList.remove('dark-theme', 'light-theme');
+        root.classList.add(theme + '-theme');
+        if (document.body) {
+          document.body.classList.remove('dark-theme', 'light-theme');
+          document.body.classList.add(theme + '-theme');
+        }
+        try { root.style.colorScheme = theme; } catch (_) { }
+        const computedBg = (() => {
+          try {
+            const base = document.body ? getComputedStyle(document.body) : getComputedStyle(root);
+            return base.getPropertyValue('--bg').trim();
+          } catch (_) {
+            return '';
+          }
+        })();
+        const bg = computedBg || (theme === 'dark' ? '#09090b' : '#ffffff');
+        root.style.backgroundColor = bg;
+        if (document.body) document.body.style.backgroundColor = bg;
+        void root.offsetHeight;
+        
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+          // If current is dark, show SUN to switch to light. If light, show MOON.
+          btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+          btn.setAttribute('aria-label', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+        }
+        if (document.body) {
+          requestAnimationFrame(() => {
+            // iOS/WKWebView: sometimes tiles don't repaint until a scroll happens.
+            const body = document.body;
+            const prevOpacity = body.style.opacity;
+            body.style.opacity = '0.99999';
+
+            const doc = document.documentElement;
+            const maxY = Math.max(0, doc.scrollHeight - window.innerHeight);
+            const y0 = Math.max(0, Math.min(scrollY, maxY));
+            const y1 = maxY ? (y0 < maxY ? y0 + 1 : Math.max(0, y0 - 1)) : y0;
+            window.scrollTo(scrollX, y1);
+
+            requestAnimationFrame(() => {
+              body.style.opacity = prevOpacity;
+              window.scrollTo(scrollX, y0);
+            });
+          });
+        }
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark-theme') ||
+          (document.body && document.body.classList.contains('dark-theme'));
+        const next = isDark ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      }
+
+      function init() {
+        const theme = getPreferredTheme();
+        applyTheme(theme);
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.addEventListener('click', toggleTheme);
+      }
+
+      if (window.matchMedia) {
+        const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleSystemChange = (e) => {
+          if (!localStorage.getItem(THEME_KEY)) {
+            applyTheme(e.matches ? 'dark' : 'light');
+          }
+        };
+        if (colorSchemeQuery.addEventListener) colorSchemeQuery.addEventListener('change', handleSystemChange);
+        else if (colorSchemeQuery.addListener) colorSchemeQuery.addListener(handleSystemChange);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('lessons');
+      const lastWrap = document.getElementById('lastSeenWrap');
+      const lastBox = document.getElementById('lastSeen');
+      const FAV_KEY = 'nce_favs';
+      const RECENT_KEY = 'nce_recents';
+      const LIB = (window.NCE_IMPORT && NCE_IMPORT.LIB) || 'lib';
+      const toolbarEl = document.getElementById('libraryToolbar');
+      const countEl = document.getElementById('libraryCount');
+      const emptyEl = document.getElementById('libraryEmpty');
+      const gridEl = document.getElementById('lessonsGrid');
+      let library = [];
+
+      async function loadLibrary() {
+        try {
+          if (!window.NCE_RESOURCES) { library = []; return; }
+          const list = await NCE_RESOURCES.listLessons(LIB);
+          library = list.sort((a, b) => a.filename.localeCompare(b.filename, 'zh-Hans-CN', { numeric: true }));
+        } catch (_) { library = []; }
+      }
+      async function load() {
+        await loadLibrary();
+        render();
+      }
+      function getFavs() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (_) { return new Set(); } }
+      function saveFavs(set) { try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(set))); } catch (_) { } }
+
+      function lessonHref(lesson) { return `lesson.html#${lesson.book}/${lesson.filename}`; }
+      function fmtTime(t) { t = Math.max(0, Math.floor(t || 0)); const m = Math.floor(t / 60); const s = t % 60; return `${m}:${String(s).padStart(2, '0')}`; }
+      function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+      function itemHTML(lesson, idx, favs) {
+        const id = lesson.id;
+        const isFav = favs.has(id);
+        const no = String(idx + 1).padStart(2, '0');
+        return `
+          <a class="lesson-item" href="${esc(lessonHref(lesson))}" data-id="${esc(id)}">
+            <div class="lesson-content">
+              <div class="lesson-num">${no}</div>
+              <div class="lesson-title">${esc(lesson.title || lesson.filename)}</div>
+            </div>
+            <button class="fav-btn ${isFav ? 'active' : ''}" type="button" aria-label="收藏" aria-pressed="${isFav}" data-id="${esc(id)}">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8 12.027 3.297 14.5l.9-5.243L.1 5.997l5.258-.764L8 0l2.642 5.233 5.258.764-4.097 3.26.9 5.243L8 12.027Z"></path>
+              </svg>
+            </button>
+          </a>`;
+      }
+
+      function render() {
+        const favs = getFavs();
+        const hasLessons = library.length > 0;
+
+        // 上次学习（在整个课程库中查找最近记录）
+        try {
+          const recRaw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+          const rec = recRaw.filter(x => typeof x?.id === 'string')
+            .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+            .find(x => library.some(l => l.id === x.id));
+          if (rec) {
+            const lesson = library.find(l => l.id === rec.id);
+            let posTxt = '';
+            try {
+              const map = JSON.parse(localStorage.getItem('nce_lastpos') || '{}');
+              const lp = map[rec.id];
+              if (lp && (lp.idx >= 0 || lp.t >= 0)) {
+                posTxt = (lp.t >= 0) ? fmtTime(lp.t) : '';
+              }
+            } catch (_) { }
+            if (lastWrap && lastBox) {
+              lastWrap.style.display = '';
+              lastBox.innerHTML = `
+                  <a class="last-seen" href="${esc(lessonHref(lesson))}" data-id="${esc(rec.id)}" id="lastSeenLink">
+                    <div class="lesson-content">
+                      <div class="lesson-num">上次学习</div>
+                      <div class="lesson-title">${esc(lesson.title || lesson.filename)}</div>
+                      ${posTxt ? `<div style="font-size:13px;color:var(--muted);margin-top:4px">${posTxt}</div>` : ''}
+                    </div>
+                    <div style="flex:0 0 auto;width:20px;height:20px;color:var(--text);display:flex;align-items:center;justify-content:center">→</div>
+                  </a>`;
+            }
+          } else {
+            if (lastWrap && lastBox) { lastWrap.style.display = 'none'; lastBox.innerHTML = ''; }
+          }
+        } catch (_) { }
+
+        if (toolbarEl) toolbarEl.hidden = !hasLessons;
+        if (emptyEl) emptyEl.hidden = hasLessons;
+        if (countEl) countEl.textContent = hasLessons ? `${library.length} 课` : '';
+        if (gridEl) gridEl.innerHTML = hasLessons ? library.map((l, i) => itemHTML(l, i, favs)).join('') : '';
+      }
+      // 收藏切换（事件委托，避免把文件名内插进 onclick）
+      container.addEventListener('click', (e) => {
+        const favBtn = e.target.closest('.fav-btn');
+        if (favBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = favBtn.dataset.id;
+          if (!id) return;
+          const favs = getFavs();
+          if (favs.has(id)) favs.delete(id); else favs.add(id);
+          saveFavs(favs);
+          render();
+          return;
+        }
+        const a = e.target.closest('#lastSeenLink');
+        if (a) {
+          const id = a.dataset.id;
+          try { sessionStorage.setItem('nce_resume', id); sessionStorage.setItem('nce_resume_play', '1'); } catch (_) { }
+        }
+      });
+
+      // 资源导入（弹窗 + 拖放）
+      (function initImport() {
+        const modal = document.getElementById('importModal');
+        const statusEl = document.getElementById('importStatus');
+        const folderInput = document.getElementById('importFolderInput');
+        const filesInput = document.getElementById('importFilesInput');
+        const zipInput = document.getElementById('importZipInput');
+        if (!modal || !folderInput || !window.NCE_IMPORT) return;
+
+        function openModal() {
+          setStatus('');
+          modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+          modal.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        document.getElementById('importOpenBtn')?.addEventListener('click', openModal);
+        document.getElementById('emptyImportBtn')?.addEventListener('click', openModal);
+        document.getElementById('importClose')?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
+        });
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+        const onProgress = (d, t) => setStatus(`正在导入… ${d}/${t}`);
+        let importing = false;
+        async function run(promise) {
+          if (importing) return;
+          importing = true;
+          try {
+            setStatus('正在导入…');
+            const res = await promise;
+            const parts = [`已导入 ${res.imported} 课`];
+            if (res.skipped) parts.push(`跳过 ${res.skipped} 项`);
+            setStatus(parts.join('，'));
+            if (res.errors && res.errors.length) console.warn('导入警告：', res.errors);
+            await load();
+            if (res.imported > 0) setTimeout(closeModal, 800);
+          } catch (e) {
+            setStatus('导入失败：' + (e.message || e));
+            console.error(e);
+          } finally {
+            importing = false;
+          }
+        }
+
+        document.getElementById('importFolderBtn')?.addEventListener('click', () => folderInput.click());
+        document.getElementById('importFilesBtn')?.addEventListener('click', () => filesInput.click());
+        document.getElementById('importZipBtn')?.addEventListener('click', () => zipInput.click());
+
+        folderInput.addEventListener('change', () => {
+          if (!folderInput.files.length) return;
+          run(NCE_IMPORT.importFileList(folderInput.files, onProgress));
+          folderInput.value = '';
+        });
+        filesInput.addEventListener('change', () => {
+          if (!filesInput.files.length) return;
+          run(NCE_IMPORT.importFileList(filesInput.files, onProgress));
+          filesInput.value = '';
+        });
+        zipInput.addEventListener('change', () => {
+          if (!zipInput.files.length) return;
+          run(NCE_IMPORT.importZipFile(zipInput.files[0], onProgress));
+          zipInput.value = '';
+        });
+
+        // 空状态卡片支持直接拖放文件（mp3 / lrc / zip）
+        const emptyCard = document.getElementById('libraryEmpty');
+        if (emptyCard) {
+          ['dragenter', 'dragover'].forEach(type => emptyCard.addEventListener(type, (e) => {
+            e.preventDefault();
+            emptyCard.classList.add('dragover');
+          }));
+          ['dragleave', 'drop'].forEach(type => emptyCard.addEventListener(type, (e) => {
+            e.preventDefault();
+            emptyCard.classList.remove('dragover');
+          }));
+          emptyCard.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer?.files || []);
+            if (!files.length) return;
+            const zip = files.find(f => /\.zip$/i.test(f.name));
+            openModal();
+            if (zip) run(NCE_IMPORT.importZipFile(zip, onProgress));
+            else run(NCE_IMPORT.importFileList(files, onProgress));
+          });
+        }
+      })();
+
+      load();
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="header-actions">
+        <button id="searchBtn" class="icon-btn search-trigger" aria-label="搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <button id="themeToggleBtn" class="icon-btn theme-toggle" aria-label="切换主题">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <a href="favorites.html" class="icon-btn home-fav-link" id="favoritesLinkHome" aria-label="收藏清单">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 17.75 5.83 21l1.18-6.88L2 9.24l6.91-1L12 2l3.09 6.24 6.91 1-5.01 4.88L18.17 21z"></path>
+          </svg>
+        </a>
+      </div>
+      <h1 id="bookTitle">EchoFlow</h1>
+      <p class="subtitle">导入你的 mp3 + lrc，逐句点读、循环与跟读</p>
+    </header>
+
+    <!-- Search Modal -->
+    <div id="searchModal" class="search-overlay" hidden>
+      <div class="search-container">
+        <div class="search-header">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="搜索句子、单词或课文..." autocomplete="off">
+            <button id="searchClear" class="search-clear" aria-label="清除搜索" hidden>×</button>
+          </div>
+          <button id="searchClose" class="search-cancel">取消</button>
+        </div>
+        <div class="search-body">
+          <div id="searchResults" class="search-results"></div>
+          <div id="searchEmpty" class="search-empty" hidden>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <p>未找到相关内容</p>
+          </div>
+          <div id="searchLoading" class="search-loading" hidden>
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="searchLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
+    <main class="lessons" id="lessons">
+      <section class="library-toolbar" id="libraryToolbar" hidden>
+        <div class="library-title">
+          <h2>课程库</h2>
+          <span class="library-count" id="libraryCount"></span>
+        </div>
+        <button type="button" class="btn-quiet" id="importOpenBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          导入
+        </button>
+      </section>
+      <section class="section last-seen-section" id="lastSeenWrap" style="display:none">
+        <div id="lastSeen"></div>
+      </section>
+      <section class="library-empty" id="libraryEmpty" hidden>
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+            <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
+        </div>
+        <h2>课程库还是空的</h2>
+        <p>导入 mp3 音频和同名 lrc 字幕，它们会变成可逐句点读的课程。<br>文件只保存在这台设备的浏览器里，不会上传。</p>
+        <button type="button" class="btn-primary" id="emptyImportBtn">导入资源</button>
+        <p class="empty-drop-hint">也可以把文件直接拖到这里</p>
+      </section>
+      <div class="lessons-grid" id="lessonsGrid"></div>
+    </main>
+    <footer>
+      <p class="repo">
+        <a class="gh-link" href="https://github.com/luzhenhua/echo-flow" target="_blank" rel="noopener"
+          aria-label="GitHub repository">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z">
+            </path>
+          </svg>
+        </a>
+      </p>
+      <p class="byline">本网站由 <a href="https://zhenhua.lu/" target="_blank" rel="noopener">卢振华</a> 开发与维护</p>
+      <p class="version"><a href="https://github.com/luzhenhua/echo-flow/releases" target="_blank" rel="noopener">版本
+          1.7.9</a><span id="pwaFooterInstall" class="pwa-footer-link" hidden> · <a href="#">安装应用</a></span></p>
+      <div class="footer-actions">
+        <a class="footer-btn" href="donate.html">捐助</a>
+        <a class="footer-btn" href="about.html">关于</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // 注册 Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => {
+            console.log('[PWA] Service Worker 注册成功');
+            reg.update();
+
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+
+            // Show update notification instead of auto-refresh
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (hadController) showUpdateNotification();
+            });
+          })
+          .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
+      });
+    }
+
+    function showUpdateNotification() {
+      // Prevent duplicate notifications
+      if (document.getElementById('updateNotification')) return;
+
+      const notification = document.createElement('div');
+      notification.id = 'updateNotification';
+      notification.innerHTML = `
+        <span>🎉 新版本已就绪</span>
+        <button onclick="window.location.reload()">点击刷新</button>
+      `;
+      notification.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text, #1d1d1f);
+        color: var(--bg, #fff);
+        padding: 12px 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        z-index: 9999;
+        font-size: 14px;
+        animation: slideUp 0.3s ease;
+      `;
+      notification.querySelector('button').style.cssText = `
+        background: var(--accent, #3b82f6);
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 500;
+      `;
+      document.body.appendChild(notification);
+    }
+  </script>
+
+  <!-- PWA Install Prompt -->
+  <div id="pwaPrompt" class="pwa-prompt">
+    <img src="icons/icon-192x192.png" alt="" class="pwa-prompt-icon">
+    <div class="pwa-prompt-content">
+      <span class="pwa-prompt-title">安装 EchoFlow</span>
+      <span class="pwa-prompt-sub" id="pwaPromptSub">添加到主屏幕，随时学习</span>
+    </div>
+    <button id="pwaInstall" class="pwa-prompt-btn">安装</button>
+    <button id="pwaClose" class="pwa-prompt-close" type="button" aria-label="关闭安装提示" tabindex="0">×</button>
+  </div>
+  <script>
+    (function () {
+      const DISMISS_KEY = 'pwa_dismissed';
+      const INSTALLED_KEY = 'pwa_installed';
+      let deferredPrompt = null;
+      const el = document.getElementById('pwaPrompt');
+      const installBtn = document.getElementById('pwaInstall');
+      const closeBtn = document.getElementById('pwaClose');
+      const promptSub = document.getElementById('pwaPromptSub');
+      const footerInstall = document.getElementById('pwaFooterInstall');
+      if (!el) return;
+
+      // 检测 iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+      const isIOSSafari = isIOS && isSafari;
+      const isStandalone = window.matchMedia('(display-mode:standalone)').matches || navigator.standalone;
+
+      const isInstalled = () => isStandalone || localStorage.getItem(INSTALLED_KEY);
+      const isDismissed = () => { const d = localStorage.getItem(DISMISS_KEY); return d && (Date.now() - parseInt(d)) < 7 * 24 * 60 * 60 * 1000; };
+
+      const showPrompt = () => {
+        if (isInstalled() || isDismissed()) return;
+        if (!deferredPrompt && !isIOSSafari) return;
+        el.classList.add('show');
+      };
+      const hidePrompt = () => el.classList.remove('show');
+      const showFooterLink = () => { if (footerInstall && !isInstalled()) footerInstall.hidden = false; };
+      const hideFooterLink = () => { if (footerInstall) footerInstall.hidden = true; };
+
+      // iOS 引导界面
+      const showIOSGuide = () => {
+        el.classList.add('ios-prompt');
+        promptSub.innerHTML = '点击底部 <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> 然后选择「添加到主屏幕」';
+        installBtn.textContent = '知道了';
+        installBtn.onclick = hidePrompt;
+      };
+
+      const doInstall = async () => {
+        // iOS Safari: 点击后显示引导
+        if (isIOSSafari) {
+          showIOSGuide();
+          return;
+        }
+        // Chrome/Edge: 标准安装流程
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') localStorage.setItem(INSTALLED_KEY, '1');
+        deferredPrompt = null;
+        hidePrompt();
+        hideFooterLink();
+      };
+
+      // iOS Safari: 延迟显示提示（与 Android 相同的初始界面）
+      if (isIOSSafari && !isInstalled() && !isDismissed()) {
+        showFooterLink();
+        setTimeout(showPrompt, 2500);
+      }
+
+      // Chrome/Edge: 标准安装流程
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showFooterLink();
+        setTimeout(showPrompt, 2500);
+      });
+
+      installBtn.addEventListener('click', doInstall);
+      if (footerInstall) {
+        footerInstall.querySelector('a').addEventListener('click', e => {
+          e.preventDefault();
+          showPrompt();
+        });
+      }
+      closeBtn.addEventListener('click', () => { localStorage.setItem(DISMISS_KEY, Date.now()); hidePrompt(); });
+      window.addEventListener('appinstalled', () => { localStorage.setItem(INSTALLED_KEY, '1'); hidePrompt(); hideFooterLink(); });
+    })();
+  </script>
+  <!-- Import Modal -->
+  <div id="importModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card import-modal-card">
+      <button type="button" class="modal-close" id="importClose" aria-label="关闭">×</button>
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <h3 class="modal-title">导入资源</h3>
+      <p class="modal-text">选择 mp3 音频和同名 lrc 字幕，配对后成为一课。文件只保存在本机浏览器。</p>
+      <div class="import-options">
+        <button type="button" class="import-option" id="importFolderBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">选择文件夹</span>
+            <span class="import-option-hint">批量导入整个文件夹里的音频和字幕</span>
+          </span>
+        </button>
+        <button type="button" class="import-option" id="importFilesBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+              <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">选择文件</span>
+            <span class="import-option-hint">多选若干 mp3 / lrc 文件</span>
+          </span>
+        </button>
+        <button type="button" class="import-option" id="importZipBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8v13H3V8"></path>
+              <path d="M1 3h22v5H1z"></path>
+              <path d="M10 12h4"></path>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">导入 zip 压缩包</span>
+            <span class="import-option-hint">解压包内的音频和字幕后导入</span>
+          </span>
+        </button>
+      </div>
+      <p class="import-modal-status" id="importStatus" aria-live="polite"></p>
+      <input type="file" id="importFolderInput" webkitdirectory directory multiple hidden>
+      <input type="file" id="importFilesInput" accept=".mp3,.m4a,.ogg,.wav,.lrc" multiple hidden>
+      <input type="file" id="importZipInput" accept=".zip" hidden>
+    </div>
+  </div>
+
+  <!-- Copyright Confirmation Modal -->
+  <div id="copyrightModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <h3 class="modal-title">使用须知</h3>
+      <p class="modal-text">EchoFlow 是一款点读跟读<strong>工具</strong>，<strong>不提供任何教材音频或课文内容</strong>。你需要自行导入合法拥有的 mp3 音频与 lrc 字幕文件；导入的资源仅保存在你本机浏览器，不会上传。请仅导入你合法拥有的资源，拒绝任何形式的盗版。</p>
+
+      <div class="modal-checkbox-wrapper">
+        <input type="checkbox" id="copyrightCheck">
+        <label for="copyrightCheck">我已知晓本工具不含教材内容，且将仅导入我合法拥有的资源</label>
+      </div>
+
+      <button id="copyrightConfirmBtn" class="modal-btn" disabled>开始使用</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const KEY = 'nce_copyright_confirmed';
+      const modal = document.getElementById('copyrightModal');
+      const checkbox = document.getElementById('copyrightCheck');
+      const btn = document.getElementById('copyrightConfirmBtn');
+
+      if (!modal || !checkbox || !btn) return;
+
+      // Check if already confirmed
+      const confirmed = localStorage.getItem(KEY);
+      if (!confirmed) {
+        modal.style.display = 'flex';
+        // Disable scroll
+        document.body.style.overflow = 'hidden';
+      }
+
+      checkbox.addEventListener('change', (e) => {
+        btn.disabled = !e.target.checked;
+      });
+
+      btn.addEventListener('click', () => {
+        if (checkbox.checked) {
+          localStorage.setItem(KEY, '1');
+          modal.style.opacity = '0';
+          setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+          }, 300);
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

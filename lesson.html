@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="EchoFlow">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>点读练习 - EchoFlow</title>
+  <meta name="description" content="EchoFlow 点读练习页：对你导入的 mp3+lrc 资源进行逐句点读、连续播放、单句循环与跟读练习，支持中英对照显示。">
+  <link rel="canonical" href="https://echoflow.zhenhua.lu/lesson.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EchoFlow">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="点读练习 - EchoFlow">
+  <meta property="og:description" content="对你导入的 mp3+lrc 资源逐句点读、连续播放、单句循环与跟读练习。">
+  <meta property="og:url" content="https://echoflow.zhenhua.lu/lesson.html">
+  <meta property="og:image" content="https://echoflow.zhenhua.lu/icons/icon-512x512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="点读练习 - EchoFlow">
+  <meta name="twitter:description" content="对你导入的 mp3+lrc 资源逐句点读与跟读练习。">
+  <meta name="twitter:image" content="https://echoflow.zhenhua.lu/icons/icon-512x512.png">
+  <script>
+    (function () {
+      try {
+        const theme = localStorage.getItem('nce_theme') ||
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const root = document.documentElement;
+        root.classList.add(theme + '-theme');
+        root.style.colorScheme = theme;
+        root.style.backgroundColor = theme === 'dark' ? '#09090b' : '#ffffff';
+      } catch (_) { }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script type="text/javascript">
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "tvjv632zgs");
+  </script>
+  <script src="assets/utils.js" defer></script>
+  <script src="assets/app.js" defer></script>
+  <script src="assets/search.js" defer></script>
+  <script src="assets/storage.js" defer></script>
+  <script src="assets/resource-store.js" defer></script>
+  <script src="assets/lesson.js" defer></script>
+
+  <!-- 主题切换逻辑 -->
+  <script>
+    (function () {
+      const THEME_KEY = 'nce_theme';
+      const SUN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      const MOON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+
+      function getPreferredTheme() {
+        return localStorage.getItem(THEME_KEY) || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      }
+
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        const scrollX = window.scrollX || 0;
+        const scrollY = window.scrollY || 0;
+        root.classList.remove('dark-theme', 'light-theme');
+        root.classList.add(theme + '-theme');
+        if (document.body) {
+          document.body.classList.remove('dark-theme', 'light-theme');
+          document.body.classList.add(theme + '-theme');
+        }
+        try { root.style.colorScheme = theme; } catch (_) { }
+        const computedBg = (() => {
+          try {
+            const base = document.body ? getComputedStyle(document.body) : getComputedStyle(root);
+            return base.getPropertyValue('--bg').trim();
+          } catch (_) {
+            return '';
+          }
+        })();
+        const bg = computedBg || (theme === 'dark' ? '#09090b' : '#ffffff');
+        root.style.backgroundColor = bg;
+        if (document.body) document.body.style.backgroundColor = bg;
+        void root.offsetHeight;
+
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+          btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+          btn.setAttribute('aria-label', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+        }
+        if (document.body) {
+          requestAnimationFrame(() => {
+            // iOS/WKWebView: sometimes tiles don't repaint until a scroll happens.
+            const body = document.body;
+            const prevOpacity = body.style.opacity;
+            body.style.opacity = '0.99999';
+
+            const doc = document.documentElement;
+            const maxY = Math.max(0, doc.scrollHeight - window.innerHeight);
+            const y0 = Math.max(0, Math.min(scrollY, maxY));
+            const y1 = maxY ? (y0 < maxY ? y0 + 1 : Math.max(0, y0 - 1)) : y0;
+            window.scrollTo(scrollX, y1);
+
+            requestAnimationFrame(() => {
+              body.style.opacity = prevOpacity;
+              window.scrollTo(scrollX, y0);
+            });
+          });
+        }
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark-theme') ||
+          (document.body && document.body.classList.contains('dark-theme'));
+        const next = isDark ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      }
+
+      function init() {
+        applyTheme(getPreferredTheme());
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.addEventListener('click', toggleTheme);
+      }
+
+      if (window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e) => {
+          if (!localStorage.getItem(THEME_KEY)) applyTheme(e.matches ? 'dark' : 'light');
+        };
+        if (mq.addEventListener) mq.addEventListener('change', handleChange);
+        else if (mq.addListener) mq.addListener(handleChange);
+      }
+
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+  </script>
+</head>
+
+<body class="lesson-page">
+  <div class="container">
+    <div class="header-actions">
+      <button id="searchBtn" class="icon-btn search-trigger" aria-label="搜索">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="themeToggleBtn" class="icon-btn theme-toggle" aria-label="切换主题">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="toolbar">
+      <div class="topbar-inner">
+        <a id="backLink" class="back-inline" href="#" aria-label="首页">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path fill="currentColor"
+              d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L4.47 8.53a1.25 1.25 0 0 1 0-1.77l4.25-4.25a.75.75 0 0 1 1.06 0Z">
+            </path>
+          </svg>
+          首页
+        </a>
+        <div class="topbar-actions">
+          <button id="settingsBtn" class="back-inline" aria-label="设置" title="设置">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <path
+                d="M9.59356 3.94014C9.68397 3.39768 10.1533 3.00009 10.7033 3.00009H13.2972C13.8472 3.00009 14.3165 3.39768 14.4069 3.94014L14.6204 5.22119C14.6828 5.59523 14.9327 5.9068 15.2645 6.09045C15.3387 6.13151 15.412 6.17393 15.4844 6.21766C15.8095 6.41393 16.2048 6.47495 16.5604 6.34175L17.7772 5.88587C18.2922 5.69293 18.8712 5.9006 19.1462 6.37687L20.4432 8.6233C20.7181 9.09957 20.6085 9.70482 20.1839 10.0544L19.1795 10.8812C18.887 11.122 18.742 11.4938 18.7491 11.8726C18.7498 11.915 18.7502 11.9575 18.7502 12.0001C18.7502 12.0427 18.7498 12.0852 18.7491 12.1275C18.742 12.5064 18.887 12.8782 19.1795 13.119L20.1839 13.9458C20.6085 14.2953 20.7181 14.9006 20.4432 15.3769L19.1462 17.6233C18.8712 18.0996 18.2922 18.3072 17.7772 18.1143L16.5604 17.6584C16.2048 17.5252 15.8095 17.5862 15.4844 17.7825C15.412 17.8263 15.3387 17.8687 15.2645 17.9097C14.9327 18.0934 14.6828 18.4049 14.6204 18.779L14.4069 20.06C14.3165 20.6025 13.8472 21.0001 13.2972 21.0001H10.7033C10.1533 21.0001 9.68397 20.6025 9.59356 20.06L9.38005 18.779C9.31771 18.4049 9.06774 18.0934 8.73597 17.9097C8.66179 17.8687 8.58847 17.8263 8.51604 17.7825C8.19101 17.5863 7.79568 17.5252 7.44011 17.6584L6.22325 18.1143C5.70826 18.3072 5.12926 18.0996 4.85429 17.6233L3.55731 15.3769C3.28234 14.9006 3.39199 14.2954 3.81657 13.9458L4.82092 13.119C5.11343 12.8782 5.25843 12.5064 5.25141 12.1276C5.25063 12.0852 5.25023 12.0427 5.25023 12.0001C5.25023 11.9575 5.25063 11.915 5.25141 11.8726C5.25843 11.4938 5.11343 11.122 4.82092 10.8812L3.81657 10.0544C3.39199 9.70484 3.28234 9.09958 3.55731 8.62332L4.85429 6.37688C5.12926 5.90061 5.70825 5.69295 6.22325 5.88588L7.4401 6.34176C7.79566 6.47496 8.19099 6.41394 8.51603 6.21767C8.58846 6.17393 8.66179 6.13151 8.73597 6.09045C9.06774 5.9068 9.31771 5.59523 9.38005 5.22119L9.59356 3.94014Z">
+              </path>
+              <path
+                d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3432 10.3431 9.00001 12 9.00001C13.6569 9.00001 15 10.3432 15 12Z">
+              </path>
+            </svg>
+            设置
+          </button>
+        </div>
+      </div>
+    </div>
+    <header class="hero">
+      <h1 id="lessonTitle">课文</h1>
+      <p id="lessonSub" class="muted"></p>
+    </header>
+
+    <div id="searchModal" class="search-overlay" hidden>
+      <div class="search-container">
+        <div class="search-header">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="搜索句子、单词或课文..." autocomplete="off">
+            <button id="searchClear" class="search-clear" aria-label="清除搜索" hidden>×</button>
+          </div>
+          <button id="searchClose" class="search-cancel">取消</button>
+        </div>
+        <div class="search-body">
+          <div id="searchResults" class="search-results"></div>
+          <div id="searchEmpty" class="search-empty" hidden>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <p>未找到相关内容</p>
+          </div>
+          <div id="searchLoading" class="search-loading" hidden>
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="searchLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
+
+    <main class="sentences" id="sentences"></main>
+    <div id="playerLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
+    <div class="lesson-nav">
+      <a id="prevLesson" class="btn-nav prev" href="#">上一课</a>
+      <a id="nextLesson" class="btn-nav next" href="#">下一课</a>
+    </div>
+    <!-- Bottom player bar -->
+    <div class="bottom-player-bar" role="region" aria-label="播放器">
+      <div class="player">
+        <div class="custom-player">
+          <audio id="player"></audio>
+          <button id="playPauseBtn" class="play-btn" aria-label="播放/暂停">
+            <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          </button>
+          <div class="time-display" id="currentTime">0:00</div>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar">
+              <div class="progress-filled" id="progressFilled"></div>
+            </div>
+          </div>
+          <div class="time-display" id="duration">0:00</div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <p class="repo">
+        <a class="gh-link" href="https://github.com/luzhenhua/echo-flow" target="_blank" rel="noopener"
+          aria-label="GitHub repository">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36 .09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z">
+            </path>
+          </svg>
+        </a>
+      </p>
+      <p class="byline">Designed &amp; Maintained by <a href="https://zhenhua.lu/" target="_blank"
+          rel="noopener">Luzhenhua</a></p>
+      <p class="version"><a href="https://github.com/luzhenhua/echo-flow/releases" target="_blank" rel="noopener">版本
+          1.7.9</a><span id="pwaFooterInstall" class="pwa-footer-link" hidden> · <a href="#">安装应用</a></span></p>
+      <div class="footer-actions">
+        <a class="footer-btn" href="donate.html">捐助</a>
+        <a class="footer-btn" href="about.html">关于</a>
+      </div>
+    </footer>
+  </div>
+  <!-- Settings Overlay/Panel -->
+  <div id="settingsOverlay" class="settings-overlay" hidden></div>
+  <div id="settingsPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
+    aria-labelledby="settingsTitle" hidden>
+    <div class="settings-header">
+      <h2 id="settingsTitle">偏好设置</h2>
+      <button id="settingsClose" class="icon-btn close-btn" aria-label="关闭设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="settings-content-scroll">
+      <!-- Section 1: Reading Mode (Hero Section) -->
+      <div class="setting-section">
+        <h3 class="section-title">阅读模式</h3>
+        <div class="read-mode-grid" role="radiogroup" aria-label="阅读模式">
+          <!-- Continuous -->
+          <label class="bento-card mode-card">
+            <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </div>
+              <div class="text-box">
+                <span class="card-title">连读</span>
+                <span class="card-desc">自动播放下一句</span>
+              </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
+            </div>
+          </label>
+
+          <!-- Single -->
+          <label class="bento-card mode-card">
+            <input type="radio" id="readModeSingle" name="readMode" value="single">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <div class="text-box">
+                <span class="card-title">点读</span>
+                <span class="card-desc">点击播放单句</span>
+              </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
+            </div>
+          </label>
+
+          <!-- Listen -->
+          <label class="bento-card mode-card">
+            <input type="radio" id="readModeListen" name="readMode" value="listen">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </div>
+              <div class="text-box">
+                <span class="card-title">听读</span>
+                <span class="card-desc">原文隐藏纯听力</span>
+              </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
+            </div>
+          </label>
+
+          <!-- Shadow -->
+          <label class="bento-card mode-card">
+            <input type="radio" id="readModeShadow" name="readMode" value="shadow">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </div>
+              <div class="text-box">
+                <span class="card-title">跟读</span>
+                <span class="card-desc">单句循环复读</span>
+              </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section: Subtitle Language -->
+      <div class="setting-section">
+        <h3 class="section-title">字幕语言</h3>
+        <div class="bento-card full-card">
+          <div id="langTabs" class="segmented-control lang-segments" role="radiogroup" aria-label="字幕语言">
+            <button class="seg-btn" data-mode="en" aria-label="仅英文">EN</button>
+            <button class="seg-btn" data-mode="bi" aria-label="中英双语">EN+CN</button>
+            <button class="seg-btn" data-mode="cn" aria-label="仅中文">CN</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Shadow Settings (Conditional) -->
+      <div id="shadowSettingsGroup" class="setting-section" style="display:none;">
+        <h3 class="section-title">跟读配置</h3>
+        <div class="bento-card full-card shadow-config-card">
+          <div class="config-row">
+            <span class="label">循环次数</span>
+            <div class="stepper">
+              <button id="shadowDec" class="stepper-btn" aria-label="减少循环次数">−</button>
+              <input id="shadowRepeat" class="stepper-input" type="number" value="2" readonly aria-label="循环次数">
+              <button id="shadowInc" class="stepper-btn" aria-label="增加循环次数">+</button>
+            </div>
+          </div>
+          <div class="config-row border-top">
+            <span class="label">跟读间隔</span>
+            <div class="segmented-control small">
+              <div id="shadowGapCard" style="display:contents">
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapShort" name="shadowGap" value="short">
+                  <span>短</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapMedium" name="shadowGap" value="medium" checked>
+                  <span>中</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapLong" name="shadowGap" value="long">
+                  <span>长</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Controls & Toggles -->
+      <div class="setting-section">
+        <h3 class="section-title">播放控制</h3>
+        <div class="bento-grid-2">
+
+          <!-- Playback Speed -->
+          <div class="bento-card control-card">
+            <div class="card-header">
+              <span class="label">播放速度</span>
+              <span class="value-display" id="speedDisplay">1.0x</span>
+            </div>
+            <!-- Custom Segmented Control for Speed -->
+            <div class="segmented-control speed-segments">
+              <button class="seg-btn" data-rate="0.8" aria-label="0.8倍速">0.8</button>
+              <button class="seg-btn active" data-rate="1.0" aria-label="1.0倍速">1.0</button>
+              <button class="seg-btn" data-rate="1.2" aria-label="1.2倍速">1.2</button>
+              <button class="seg-btn" data-rate="1.5" aria-label="1.5倍速">1.5</button>
+              <button class="seg-btn" data-rate="2.0" aria-label="2.0倍速">2.0</button>
+              <button class="seg-btn" data-rate="2.5" aria-label="2.5倍速">2.5</button>
+              <!-- Hidden original button for compatibility if needed, or remove completely -->
+              <button id="speed" hidden>Legacy</button>
+            </div>
+            <div class="speed-custom-row">
+              <label class="speed-custom-label" for="speedCustomInput">手动</label>
+              <div class="speed-custom-field">
+                <input id="speedCustomInput" class="speed-custom-input" type="number" min="0.5" max="2.5" step="0.05"
+                  inputmode="decimal" aria-label="手动设置播放速度">
+                <span class="speed-custom-unit">x</span>
+              </div>
+              <span class="speed-custom-hint">0.5 - 2.5</span>
+            </div>
+          </div>
+
+          <!-- After Play Action -->
+          <div class="bento-card control-card">
+            <div class="card-header">
+              <span class="label">播完后</span>
+            </div>
+            <div class="select-wrapper">
+              <select id="afterPlaySelect" class="modern-select">
+                <option value="none">结束播放</option>
+                <option value="next">自动续集</option>
+                <option value="single">单句循环</option>
+                <option value="all">整篇循环</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <!-- Hidden radios for JS compatibility -->
+              <div style="display:none;" id="afterPlayCard">
+                <input type="radio" id="afterPlaySingle" name="afterPlay" value="single">
+                <input type="radio" id="afterPlayAll" name="afterPlay" value="all">
+                <input type="radio" id="afterPlayNext" name="afterPlay" value="next">
+                <input type="radio" id="afterPlayNone" name="afterPlay" value="none" checked>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 3: Toggles Row -->
+      <div class="setting-section">
+        <div class="toggles-list">
+
+          <!-- Auto Scroll -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">自动跟随</span>
+              <span class="toggle-desc">播放时高亮并滚动到当前句</span>
+            </div>
+            <label class="switch">
+              <!-- Using hidden radios to mimic checkbox behavior for compatibility or rewrite JS -->
+              <!-- New strategy: Use a real checkbox for UI, and sync with hidden radios -->
+              <input type="checkbox" id="followToggleCheckbox" checked>
+              <span class="slider round"></span>
+              <!-- Hidden radios for legacy JS -->
+              <div style="display:none;" id="followCard">
+                <input type="radio" id="followOn" name="autoFollow" value="true" checked>
+                <input type="radio" id="followOff" name="autoFollow" value="false">
+              </div>
+            </label>
+          </div>
+
+          <!-- Skip Intro -->
+          <div class="toggle-row border-top">
+            <div class="toggle-info">
+              <span class="toggle-label">跳过开头</span>
+              <span class="toggle-desc">自动跳过标题和引导语</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="skipIntroCheckbox">
+              <span class="slider round"></span>
+              <!-- Hidden radios for legacy JS -->
+              <div style="display:none;" id="skipIntroCard">
+                <input type="radio" id="skipIntroOn" name="skipIntro" value="true">
+                <input type="radio" id="skipIntroOff" name="skipIntro" value="false" checked>
+              </div>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 4: Shadow Settings (Removed: Moved to Section 1) -->
+
+      <!-- Section: Data Management -->
+      <div class="setting-section">
+        <h3 class="section-title">数据管理</h3>
+        <div class="bento-card full-card">
+          <button id="dataExportBtn" class="data-mgmt-row" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <div class="data-mgmt-text">
+              <span class="data-mgmt-label">导出备份</span>
+              <span class="data-mgmt-desc">将收藏、进度和设置保存为 JSON 文件</span>
+            </div>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <div class="data-mgmt-divider"></div>
+          <button id="dataImportBtn" class="data-mgmt-row" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="data-mgmt-text">
+              <span class="data-mgmt-label">导入备份</span>
+              <span class="data-mgmt-desc">从 JSON 文件恢复数据（将覆盖当前数据）</span>
+            </div>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <input type="file" id="dataImportFile" accept=".json" hidden>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="setting-section action-section">
+        <button id="shortcutsToggle" class="action-btn" aria-label="查看键盘快捷键">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z">
+            </path>
+          </svg>
+          <span>键盘快捷键</span>
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="settings-footer-modern">
+      <button id="settingsReset" class="text-btn">恢复默认</button>
+      <button id="settingsDone" class="primary-btn">完成</button>
+    </div>
+  </div>
+
+  <!-- Shortcuts Help Panel -->
+  <div id="shortcutsOverlay" class="settings-overlay" hidden></div>
+  <div id="shortcutsPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
+    aria-labelledby="shortcutsTitle" hidden>
+    <div class="settings-header">
+      <h2 id="shortcutsTitle">快捷键</h2>
+      <button id="shortcutsClose" class="icon-btn close-btn" aria-label="关闭快捷键帮助">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="settings-content-scroll">
+      <div class="shortcuts-tip-card bento-card"
+        style="padding: 12px; display: flex; align-items: center; gap: 8px; background: var(--surface);">
+        <svg style="width: 16px; height: 16px; color: var(--muted);" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span style="font-size: 13px; color: var(--muted);">点击按键可自定义配置，冲突时会有提示。</span>
+      </div>
+      <div id="shortcutsContainer" class="shortcuts-grid-layout">
+        <!-- 由 JS 动态渲染 -->
+      </div>
+    </div>
+
+    <div class="settings-footer-modern">
+      <button id="shortcutsReset" class="text-btn">恢复默认</button>
+      <div style="flex:1"></div>
+      <button id="shortcutsBack" class="text-btn" style="margin-right: 12px;">返回设置</button>
+      <button id="shortcutsDone" class="primary-btn">完成</button>
+    </div>
+  </div>
+
+  <!-- Auto Stop (Sleep Timer) Panel -->
+  <div id="autoStopOverlay" class="settings-overlay" hidden></div>
+  <div id="autoStopPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
+    aria-labelledby="autoStopTitle" hidden>
+    <div class="settings-header">
+      <h2 id="autoStopTitle">自动关闭</h2>
+      <button id="autoStopClose" class="icon-btn close-btn" aria-label="关闭自动关闭设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="settings-content-scroll">
+      <!-- Enable Toggle -->
+      <div class="setting-section">
+        <div class="toggle-row bento-card" style="border-radius: 12px;">
+          <div class="toggle-info">
+            <span class="toggle-label">启用定时</span>
+            <span class="toggle-desc">在连续播放数课后自动停止</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="autoStopToggleSync"> <!-- Sync via JS -->
+            <span class="slider round"></span>
+            <!-- Legacy Radios for JS compatibility -->
+            <div id="autoStopCard" style="display:none;">
+              <input type="radio" id="autoStopOn" name="autoStop" value="true">
+              <input type="radio" id="autoStopOff" name="autoStop" value="false" checked>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Count Config -->
+      <div class="setting-section">
+        <h3 class="section-title">设置时长</h3>
+        <div class="bento-card full-card">
+          <div class="config-row">
+            <span class="label">持续播放</span>
+            <div class="stepper">
+              <button id="autoStopDecSync" class="stepper-btn" aria-label="减少课数">−</button>
+              <input id="autoStopCount" class="stepper-input" type="number" min="1" max="50" value="3"
+                aria-label="连续播放课数">
+              <button id="autoStopIncSync" class="stepper-btn" aria-label="增加课数">+</button>
+            </div>
+            <span class="label" style="font-size: 13px; color: var(--muted); margin-left: 4px;">课</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-footer-modern">
+      <button id="autoStopCancel" class="text-btn">取消</button>
+      <button id="autoStopSave" class="primary-btn">保存</button>
+    </div>
+  </div>
+
+  <script>
+    // 注册 Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => {
+            console.log('[PWA] Service Worker 注册成功');
+            reg.update();
+
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+
+            // Show update notification instead of auto-refresh
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (hadController) showUpdateNotification();
+            });
+          })
+          .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
+      });
+    }
+
+    function showUpdateNotification() {
+      if (document.getElementById('updateNotification')) return;
+      const notification = document.createElement('div');
+      notification.id = 'updateNotification';
+      notification.className = 'update-toast';
+      notification.innerHTML = `<span class="update-toast-text">🎉 新版本已就绪</span><button class="update-toast-btn" onclick="window.location.reload()">刷新</button>`;
+      document.body.appendChild(notification);
+    }
+  </script>
+
+  <!-- PWA Install Prompt -->
+  <div id="pwaPrompt" class="pwa-prompt">
+    <img src="icons/icon-192x192.png" alt="" class="pwa-prompt-icon">
+    <div class="pwa-prompt-content">
+      <span class="pwa-prompt-title">安装 EchoFlow</span>
+      <span class="pwa-prompt-sub" id="pwaPromptSub">添加到主屏幕，随时学习</span>
+    </div>
+    <button id="pwaInstall" class="pwa-prompt-btn">安装</button>
+    <button id="pwaClose" class="pwa-prompt-close" type="button" aria-label="关闭安装提示" tabindex="0">×</button>
+  </div>
+  <!-- Back to top -->
+  <button id="backToTop" class="back-to-top" type="button" aria-label="回到顶端" title="回到顶端">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14"></path>
+      <polyline points="6 11 12 5 18 11"></polyline>
+    </svg>
+  </button>
+  <script>
+    (function () {
+      const DISMISS_KEY = 'pwa_dismissed';
+      const INSTALLED_KEY = 'pwa_installed';
+      let deferredPrompt = null;
+      const el = document.getElementById('pwaPrompt');
+      const installBtn = document.getElementById('pwaInstall');
+      const closeBtn = document.getElementById('pwaClose');
+      const promptSub = document.getElementById('pwaPromptSub');
+      const footerInstall = document.getElementById('pwaFooterInstall');
+      if (!el) return;
+
+      // 检测 iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+      const isIOSSafari = isIOS && isSafari;
+      const isStandalone = window.matchMedia('(display-mode:standalone)').matches || navigator.standalone;
+
+      const isInstalled = () => isStandalone || localStorage.getItem(INSTALLED_KEY);
+      const isDismissed = () => { const d = localStorage.getItem(DISMISS_KEY); return d && (Date.now() - parseInt(d)) < 7 * 24 * 60 * 60 * 1000; };
+
+      const showPrompt = () => {
+        if (isInstalled() || isDismissed()) return;
+        if (!deferredPrompt && !isIOSSafari) return;
+        el.classList.add('show');
+      };
+      const hidePrompt = () => el.classList.remove('show');
+      const showFooterLink = () => { if (footerInstall && !isInstalled()) footerInstall.hidden = false; };
+      const hideFooterLink = () => { if (footerInstall) footerInstall.hidden = true; };
+
+      // iOS 引导界面
+      const showIOSGuide = () => {
+        el.classList.add('ios-prompt');
+        promptSub.innerHTML = '点击底部 <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> 然后选择「添加到主屏幕」';
+        installBtn.textContent = '知道了';
+        installBtn.onclick = hidePrompt;
+      };
+
+      const doInstall = async () => {
+        // iOS Safari: 点击后显示引导
+        if (isIOSSafari) {
+          showIOSGuide();
+          return;
+        }
+        // Chrome/Edge: 标准安装流程
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') localStorage.setItem(INSTALLED_KEY, '1');
+        deferredPrompt = null;
+        hidePrompt();
+        hideFooterLink();
+      };
+
+      // iOS Safari: 延迟显示提示（与 Android 相同的初始界面）
+      if (isIOSSafari && !isInstalled() && !isDismissed()) {
+        showFooterLink();
+        setTimeout(showPrompt, 2500);
+      }
+
+      // Chrome/Edge: 标准安装流程
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showFooterLink();
+        setTimeout(showPrompt, 2500);
+      });
+
+      installBtn.addEventListener('click', doInstall);
+      if (footerInstall) {
+        footerInstall.querySelector('a').addEventListener('click', e => {
+          e.preventDefault();
+          showPrompt();
+        });
+      }
+      closeBtn.addEventListener('click', () => { localStorage.setItem(DISMISS_KEY, Date.now()); hidePrompt(); });
+      window.addEventListener('appinstalled', () => { localStorage.setItem(INSTALLED_KEY, '1'); hidePrompt(); hideFooterLink(); });
+    })();
+  </script>
+</body>
+
+</html>
