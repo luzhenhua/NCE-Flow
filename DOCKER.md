@@ -1,6 +1,6 @@
 # Docker 部署指南
 
-本文档介绍如何使用 Docker 部署 NCE Flow 应用。
+本文档介绍如何使用 Docker 部署 EchoFlow 应用。
 
 ## 前置要求
 
@@ -98,15 +98,7 @@ ports:
 
 ### 数据持久化
 
-如果需要在运行时更新课程内容，可以在 `docker-compose.yml` 中取消注释以下内容：
-
-```yaml
-volumes:
-  - ./NCE1:/usr/share/nginx/html/NCE1
-  - ./NCE2:/usr/share/nginx/html/NCE2
-  - ./NCE3:/usr/share/nginx/html/NCE3
-  - ./NCE4:/usr/share/nginx/html/NCE4
-```
+应用本身不含任何课程内容，音频与字幕由用户在浏览器内导入并保存在本机 IndexedDB，服务端无需为课程内容挂载卷。
 
 ### 用户数据持久化与多设备同步（可选）
 

@@ -1,9 +1,9 @@
 /**
- * NCE Flow Service Worker
- * 缓存策略：核心文件缓存优先，音频网络优先
+ * EchoFlow Service Worker
+ * 缓存策略：核心文件缓存优先。音频/字幕由用户导入并存于 IndexedDB，不经 SW。
  */
 
-const CACHE_NAME = 'nce-flow-v1.8.0-sync1';
+const CACHE_NAME = 'echoflow-v2.1.0-byo';
 
 // 核心静态资源（预缓存）
 const PRECACHE_ASSETS = [
@@ -22,7 +22,8 @@ const PRECACHE_ASSETS = [
   './assets/favorites.js',
   './assets/search.js',
   './assets/storage.js',
-  './static/data.json',
+  './assets/resource-store.js',
+  './assets/resources.js',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
   './icons/apple-touch-icon.png',
@@ -91,34 +92,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.method !== 'GET') {
-    return;
-  }
-
-  // 音频文件：网络优先（不缓存）
-  if (url.pathname.endsWith('.mp3')) {
-    event.respondWith(
-      fetch(request).catch(() => {
-        // 离线时返回友好提示（可选）
-        return new Response('音频需要联网播放', { status: 503 });
-      })
-    );
-    return;
-  }
-
-  // LRC 文件：网络优先，失败时用缓存
-  if (url.pathname.endsWith('.lrc')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // 成功获取后更新缓存
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
     return;
   }
 

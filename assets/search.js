@@ -1,11 +1,12 @@
 /**
- * NCE Flow Search Module
+ * EchoFlow Search Module
  * Implements global search with lazy loading index and client-side filtering.
  */
 (() => {
     const { escapeHTML, highlightText } = NCEUtils;
 
-    const SEARCH_INDEX_URL = 'static/search_index.json';
+    // 搜索范围：用户已导入的课程（IndexedDB），在其 lrc 文本上做客户端检索。
+    // 本工具不内置任何教材内容。
     let searchIndex = null;
     let isLoading = false;
     let loadFailed = false;
@@ -27,22 +28,65 @@
     // Core Logic
     // --------------------------
 
+    // 从一段 lrc 文本提取可搜索的句子 [[lineIdx, en, cn], ...]
+    const LINE_RE = /^((?:\[\d+:\d+(?:\.\d+)?\])+)(.*)$/;
+    const META_RE = /^\[(al|ar|ti|by):(.+)\]$/i;
+    function hasCJK(s) { return /[一-鿿]/.test(s); }
+    function lrcToSentences(text) {
+        const rows = String(text).replace(/\r/g, '').split('\n');
+        const out = [];
+        let ti = '';
+        let lineIdx = 0;
+        for (let i = 0; i < rows.length; i++) {
+            const raw = rows[i].trim();
+            if (!raw) continue;
+            const mm = raw.match(META_RE);
+            if (mm) { if (mm[1].toLowerCase() === 'ti') ti = mm[2].trim(); continue; }
+            const m = raw.match(LINE_RE);
+            if (!m) continue;
+            const tags = m[1];
+            let body = m[2].trim();
+            let en = body, cn = '';
+            if (body.includes('|')) { const p = body.split('|'); en = p[0].trim(); cn = (p[1] || '').trim(); }
+            else if (i + 1 < rows.length) {
+                const m2 = rows[i + 1].trim().match(LINE_RE);
+                if (m2 && m2[1] === tags && hasCJK(m2[2].trim())) { cn = m2[2].trim(); i++; }
+            }
+            out.push([lineIdx, en, cn]);
+            lineIdx++;
+        }
+        return { ti, sentences: out };
+    }
+
     async function loadIndex() {
         if (searchIndex) return;
         if (isLoading) return;
-        if (loadFailed) return;
-
         isLoading = true;
+        loadFailed = false;
         try {
-            const res = await fetch(SEARCH_INDEX_URL);
-            if (!res.ok) throw new Error('Failed to load index');
-            searchIndex = await res.json();
+            const store = window.NCE_RESOURCES;
+            if (!store) throw new Error('资源存储未就绪');
+            const metas = await store.listLessons();
+            const idx = [];
+            for (const meta of metas) {
+                if (!meta.hasLrc) continue;
+                const rec = await store.getLesson(meta.book, meta.filename);
+                if (!rec || !rec.lrcText) continue;
+                const parsed = lrcToSentences(rec.lrcText);
+                idx.push({
+                    b: meta.book,
+                    l: meta.filename,
+                    t: meta.title || parsed.ti || meta.filename,
+                    c: parsed.sentences
+                });
+            }
+            searchIndex = idx;
         } catch (e) {
-            console.error('Search index load failed:', e);
+            console.error('Search index build failed:', e);
             loadFailed = true;
             loadingState.hidden = true;
             emptyState.hidden = true;
-            resultsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">搜索服务暂时不可用</div>';
+            resultsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">搜索暂时不可用</div>';
         } finally {
             isLoading = false;
         }
@@ -57,6 +101,7 @@
             modal.classList.add('open');
             input.focus();
             setTimeout(() => input.focus(), 100);
+            searchIndex = null; // 每次打开重建，纳入最新导入的课程
             loadIndex();
         } else {
             modal.classList.remove('open');
@@ -161,10 +206,6 @@
         }
 
         const html = results.map(item => {
-            const bookName = {
-                'NCE1': '第一册', 'NCE2': '第二册', 'NCE3': '第三册', 'NCE4': '第四册'
-            }[item.book] || item.book;
-
             const link = `lesson.html#${item.book}/${item.lessonId}${item.type === 'sentence' ? '?line=' + item.lineIdx : ''}`;
 
             let contentHtml = '';
@@ -188,7 +229,7 @@
             return `
         <a href="${link}" class="search-item" onclick="document.getElementById('searchModal').click()"> <!-- Hack to close modal implicitly? No better add explicit handler -->
           <div class="search-item-header">
-            <div class="search-item-tag">${bookName} · Lesson ${item.lessonId}</div>
+            <div class="search-item-tag">${escapeHTML(String(item.lessonId || ''))}</div>
           </div>
           <div class="search-item-title" style="margin-bottom:6px">${titleHtml}</div>
           ${contentHtml}

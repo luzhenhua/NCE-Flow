@@ -1,7 +1,7 @@
 {
-  "name": "NCE Flow",
-  "short_name": "NCE Flow",
-  "description": "新概念英语在线点读，点句即读、连续播放。",
+  "name": "EchoFlow",
+  "short_name": "EchoFlow",
+  "description": "点读跟读练习工具：导入你的 mp3+lrc，逐句点读、循环与跟读。",
   "id": "./",
   "start_url": "./",
   "scope": "./",

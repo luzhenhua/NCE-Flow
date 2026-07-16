@@ -1,16 +1,19 @@
-# NCE Flow
+# EchoFlow
 
-**新概念英语在线点读，点句即读、连续播放**
+**点读跟读练习工具 · 导入你自己的 mp3+lrc，点句即读、连续播放**
 
 [![GitHub stars](https://img.shields.io/github/stars/luzhenhua/NCE-Flow?style=social)](https://github.com/luzhenhua/NCE-Flow)
 [![GitHub forks](https://img.shields.io/github/forks/luzhenhua/NCE-Flow?style=social)](https://github.com/luzhenhua/NCE-Flow)
 [![GitHub release](https://img.shields.io/github/release/luzhenhua/NCE-Flow)](https://github.com/luzhenhua/NCE-Flow/releases)
 [![License](https://img.shields.io/github/license/luzhenhua/NCE-Flow)](LICENSE)
 
-**在线体验**: https://nce.luzhenhua.cn | **下载完整版**: [Releases](https://github.com/luzhenhua/NCE-Flow/releases)
+**在线体验**: https://nce.zhenhua.lu
+
+> ⚠️ **本工具不提供任何教材音频或课文内容。** 音频（mp3）与字幕（lrc）需由你自行导入合法拥有的资源，导入的文件仅保存在你本机浏览器（IndexedDB），不会上传服务器。
 
 ## 核心功能
 
+- **自带资源导入**：支持文件夹批量 / 多选文件 / zip 包三种方式导入你自己的 mp3+lrc
 - **句子级点读**：点击任意句子开始播放，自动高亮跟随
 - **多语言视图**：EN / EN+CN / CN 三种显示模式
 - **播放控制**：倍速调节、连读/点读切换、循环模式、断点续播
@@ -55,8 +58,8 @@ docker-compose up -d
 
 ### 方式三：本地开发服务器
 
-1. **下载完整版**：[访问 Releases 页面](https://github.com/luzhenhua/NCE-Flow/releases)
-2. 解压后启动本地服务器：
+1. **下载源码**：`git clone https://github.com/luzhenhua/NCE-Flow.git`（或从仓库页面下载 zip）
+2. 启动本地服务器：
 
    **方法一：使用Python**
    ```bash
@@ -84,12 +87,10 @@ docker-compose up -d
 ## 项目结构
 
 ```
-NCE-Flow/
-├── assets/          # 样式与脚本
-├── static/          # 课程数据
-├── NCE1~NCE4/       # 四册音频和字幕
-├── index.html       # 首页
-├── lesson.html      # 课文页
+NCE-Flow/            # 仓库名沿用旧名，站点品牌为 EchoFlow
+├── assets/          # 样式与脚本（含资源导入与 IndexedDB 存储）
+├── index.html       # 首页（课程库 + 资源导入）
+├── lesson.html      # 点读页
 └── README.md        # 说明文档
 ```
 
@@ -123,36 +124,32 @@ NCE-Flow/
 - **v1.1.3** (2025-10-18)：稳定性改进 - Bug 修复和代码优化
 - **v1.1.1** (2025-10-17)：播放逻辑优化 - iOS Safari 兼容性增强
 - **v1.1.0** (2025-10-17)：UI 优化与自动跳转 - 自动续播下一课功能
-- **v1.0.0** (2025-10-11)：完整版发布 - 包含全部四册内容和音频文件
+- **v1.0.0** (2025-10-11)：首个版本发布
 
 ## 免责声明
 
-**重要声明：本项目的内容仅限个人学习、研究或欣赏之用，完全没有丝毫商业用途。**
+**重要声明：本工具本身不包含、也不提供任何教材音频或课文内容。**
 
-- 本项目仅作为辅助正版新概念英语教材的学习工具
-- 音频与文本内容的版权归原著作权人所有
-- 严禁用于任何商业目的或未经授权的传播
+- 所有音频与字幕均由用户自行导入，且仅保存在用户本机浏览器（IndexedDB），不上传服务器
+- 用户导入内容的版权归原著作权人所有，请仅导入你合法拥有的资源
+- 本工具仅供个人学习使用，严禁用于任何商业目的或未经授权的传播
 - 使用本项目即表示您同意上述条款
 
 ### 支持正版
 
-本人在学习过程中使用的是正版新概念英语教材。为了帮助同样热爱新概念英语的广大英语学习者受益，特开发此辅助学习工具。
+请在使用本工具前购买正版教材，以保护著作权人的合法权益：
 
-**为保护著作权人的权益，请在使用本站前购买正版教材：**
-
-- 购买合法授权的新概念英语正版教材
+- 购买合法授权的正版教材
 - 使用官方授权的学习资源和平台
 - 支持原创作者和教育出版社
-- 本项目仅作为正版教材的补充学习工具
 
-欢迎著作权人对本项目批评指导。如有任何版权问题或影响到您的合法权益，请联系：luzhenhuadev@qq.com，我们将立即处理。
+如有任何版权问题或影响到您的合法权益，请联系：luzhenhuadev@qq.com，我们将立即处理。
 
 ## 致谢
 
 感谢以下项目和个人的贡献：
 
 - **[@reaishijie](https://github.com/reaishijie)** - 提交了 [PR #3](https://github.com/luzhenhua/NCE-Flow/pull/3)，为课文页面增加了播放速度控制按钮及播放速度持久化功能
-- **[@iChochy](https://github.com/iChochy)** - [NCE 项目](https://github.com/iChochy/NCE/) 整理和提供了完整的新概念英语学习资料，包括封面图片、MP3 音频文件和 LRC 字幕文件，为本项目提供了宝贵的基础资源
 
 感谢所有为本项目点赞、提出建议和反馈的朋友们！
 
@@ -166,4 +163,4 @@ NCE-Flow/
 
 你也可以通过 [爱发电](https://afdian.com/a/luzhenhua) ☕ 请我喝杯咖啡
 
-Made with ❤️ by [Luzhenhua](https://luzhenhua.cn)
+Made with ❤️ by [Luzhenhua](https://zhenhua.lu)

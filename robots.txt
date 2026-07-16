@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nce.luzhenhua.cn/sitemap.xml
+Sitemap: https://nce.zhenhua.lu/sitemap.xml

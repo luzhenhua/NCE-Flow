@@ -7,33 +7,34 @@
   <meta name="theme-color" content="#6366f1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="NCE Flow">
+  <meta name="apple-mobile-web-app-title" content="EchoFlow">
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
-  <title>NCE Flow - 新概念英语在线点读 · 第一至四册课文听力跟读</title>
-  <meta name="description" content="NCE Flow 免费提供新概念英语第一册至第四册在线点读学习，可按册别和课次查找课文。每课包含英文原文和中英对照，支持逐句点读、连续播放、单句循环、在线跟读、听力练习、收藏与学习记录，适合课前预习、课后复习、听力和口语训练。">
-  <meta name="keywords" content="新概念英语,NCE,新概念英语在线,点读,课文,听力,跟读,第一册,第二册,第三册,第四册">
-  <link rel="canonical" href="https://nce.luzhenhua.cn/">
+  <title>EchoFlow - 点读跟读练习工具（自备 mp3+lrc）</title>
+  <meta name="description" content="EchoFlow 是一款本地优先的点读与跟读练习工具。导入你合法拥有的 mp3 音频与 lrc 字幕，即可逐句点读、连续播放、单句循环、听力跟读，并记录收藏与学习进度。文件只保存在本机浏览器，不上传服务器。">
+  <meta name="keywords" content="点读工具,lrc同步,听力跟读,音频点读,mp3 lrc 播放器,语言学习工具,本地优先">
+  <link rel="canonical" href="https://nce.zhenhua.lu/">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="NCE Flow">
+  <meta property="og:site_name" content="EchoFlow">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:title" content="NCE Flow - 新概念英语在线点读">
-  <meta property="og:description" content="免费的新概念英语在线学习工具，覆盖第一至四册全部课文，点句即读、连续播放、跟读与收藏。">
-  <meta property="og:url" content="https://nce.luzhenhua.cn/">
-  <meta property="og:image" content="https://nce.luzhenhua.cn/icons/icon-512x512.png">
+  <meta property="og:title" content="EchoFlow - 点读跟读练习工具（自备资源）">
+  <meta property="og:description" content="导入你自己的 mp3+lrc，即可逐句点读、连续播放、单句循环与听力跟读。本工具不提供任何教材内容。">
+  <meta property="og:url" content="https://nce.zhenhua.lu/">
+  <meta property="og:image" content="https://nce.zhenhua.lu/icons/icon-512x512.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="NCE Flow - 新概念英语在线点读">
-  <meta name="twitter:description" content="免费的新概念英语在线学习工具，覆盖第一至四册全部课文。">
-  <meta name="twitter:image" content="https://nce.luzhenhua.cn/icons/icon-512x512.png">
+  <meta name="twitter:title" content="EchoFlow - 点读跟读练习工具（自备资源）">
+  <meta name="twitter:description" content="导入你自己的 mp3+lrc，逐句点读与听力跟读。本工具不提供任何教材内容。">
+  <meta name="twitter:image" content="https://nce.zhenhua.lu/icons/icon-512x512.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "NCE Flow",
-    "alternateName": "新概念英语在线点读",
-    "url": "https://nce.luzhenhua.cn/",
-    "description": "NCE Flow 免费提供新概念英语第一册至第四册在线点读学习，可按册别和课次查找课文。每课包含英文原文和中英对照，支持逐句点读、连续播放、单句循环、在线跟读、听力练习、收藏与学习记录。",
+    "@type": "WebApplication",
+    "name": "EchoFlow",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "url": "https://nce.zhenhua.lu/",
+    "description": "本地优先的点读与跟读练习工具。不提供任何教材音频或课文，用户自行导入合法拥有的 mp3+lrc 资源，在本机浏览器进行逐句点读、连续播放、单句循环与听力跟读。",
     "inLanguage": "zh-CN"
   }
   </script>
@@ -65,6 +66,8 @@
   <script src="assets/app.js" defer></script>
   <script src="assets/search.js" defer></script>
   <script src="assets/storage.js" defer></script>
+  <script src="assets/resource-store.js" defer></script>
+  <script src="assets/resources.js" defer></script>
 
   <!-- 主题切换逻辑 -->
   <script>
@@ -171,60 +174,44 @@
       const container = document.getElementById('lessons');
       const lastWrap = document.getElementById('lastSeenWrap');
       const lastBox = document.getElementById('lastSeen');
-      const header = document.getElementById('bookTitle');
-      const segBooks = document.querySelectorAll('[data-book]');
       const FAV_KEY = 'nce_favs';
       const RECENT_KEY = 'nce_recents';
-      let lessonsData = null;
-      const getBook = () => (location.hash.slice(1) || 'NCE1').replace(/[^\w\d]/g, '');
-      function activeTab(book) { segBooks.forEach(b => b.classList.toggle('active', b.dataset.book === book)); }
-      segBooks.forEach(link => {
-        link.addEventListener('click', (event) => {
-          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-          event.preventDefault();
-          const book = link.dataset.book;
-          if (location.hash === `#${book}`) load();
-          else location.hash = book;
-        });
-      });
-      async function load() {
-        if (lessonsData) {
-          render(lessonsData);
-          return;
-        }
+      const LIB = (window.NCE_IMPORT && NCE_IMPORT.LIB) || 'lib';
+      const toolbarEl = document.getElementById('libraryToolbar');
+      const countEl = document.getElementById('libraryCount');
+      const emptyEl = document.getElementById('libraryEmpty');
+      const gridEl = document.getElementById('lessonsGrid');
+      let library = [];
+
+      async function loadLibrary() {
         try {
-          const res = await fetch('static/data.json');
-          if (!res.ok) {
-            console.error('Failed to fetch data.json:', res.status, res.statusText);
-            document.getElementById('lessons').innerHTML = '<div style="color: red; padding: 20px;">加载课程数据失败，请检查 static/data.json 文件</div>';
-            return;
-          }
-          lessonsData = await res.json();
-          render(lessonsData);
-        } catch (error) {
-          console.error('Error loading data:', error);
-          document.getElementById('lessons').innerHTML = '<div style="color: red; padding: 20px;">网络错误或数据格式问题</div>';
-        }
+          if (!window.NCE_RESOURCES) { library = []; return; }
+          const list = await NCE_RESOURCES.listLessons(LIB);
+          library = list.sort((a, b) => a.filename.localeCompare(b.filename, 'zh-Hans-CN', { numeric: true }));
+        } catch (_) { library = []; }
+      }
+      async function load() {
+        await loadLibrary();
+        render();
       }
       function getFavs() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (_) { return new Set(); } }
       function saveFavs(set) { try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(set))); } catch (_) { } }
 
-      function lessonId(book, lesson) { return `${book}/${lesson.filename}`; }
-      function toLessonHref(book, lesson) { return `lesson.html#${book}/${lesson.filename}`; }
+      function lessonHref(lesson) { return `lesson.html#${lesson.book}/${lesson.filename}`; }
       function fmtTime(t) { t = Math.max(0, Math.floor(t || 0)); const m = Math.floor(t / 60); const s = t % 60; return `${m}:${String(s).padStart(2, '0')}`; }
+      function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-      function itemHTML(book, lesson, idx, favs) {
-        const id = lessonId(book, lesson);
+      function itemHTML(lesson, idx, favs) {
+        const id = lesson.id;
         const isFav = favs.has(id);
-        const num = parseInt(book.replace('NCE', '')) || 1;
-        let lessonNumber = num === 1 ? `${idx * 2 + 1}&${idx * 2 + 2}` : String(idx + 1);
+        const no = String(idx + 1).padStart(2, '0');
         return `
-          <a class="lesson-item" href="${toLessonHref(book, lesson)}" data-id="${id}">
+          <a class="lesson-item" href="${esc(lessonHref(lesson))}" data-id="${esc(id)}">
             <div class="lesson-content">
-              <div class="lesson-num">第${lessonNumber}课</div>
-              <div class="lesson-title">${lesson.title}</div>
+              <div class="lesson-num">${no}</div>
+              <div class="lesson-title">${esc(lesson.title || lesson.filename)}</div>
             </div>
-            <button class="fav-btn ${isFav ? 'active' : ''}" role="button" aria-label="收藏" aria-pressed="${isFav}" data-id="${id}" onclick="event.preventDefault(); event.stopPropagation(); toggleFav('${id}')">
+            <button class="fav-btn ${isFav ? 'active' : ''}" type="button" aria-label="收藏" aria-pressed="${isFav}" data-id="${esc(id)}">
               <svg viewBox="0 0 16 16" aria-hidden="true">
                 <path d="M8 12.027 3.297 14.5l.9-5.243L.1 5.997l5.258-.764L8 0l2.642 5.233 5.258.764-4.097 3.26.9 5.243L8 12.027Z"></path>
               </svg>
@@ -232,96 +219,163 @@
           </a>`;
       }
 
-      function render(data) {
-        const book = getBook();
-        const num = parseInt(book.replace('NCE', '')) || 1;
-        // header.textContent = `新概念英语第${['一','二','三','四'][num-1]}册`;
-        activeTab(book);
-        const lessons = data[num] || [];
+      function render() {
         const favs = getFavs();
+        const hasLessons = library.length > 0;
 
+        // 上次学习（在整个课程库中查找最近记录）
         try {
           const recRaw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-          const rec = recRaw.filter(x => typeof x?.id === 'string' && x.id.startsWith(book + '/'))
-            .sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
+          const rec = recRaw.filter(x => typeof x?.id === 'string')
+            .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+            .find(x => library.some(l => l.id === x.id));
           if (rec) {
-            const i = lessons.findIndex(l => `${book}/${l.filename}` === rec.id);
-            if (i >= 0) {
-              const lesson = lessons[i];
-              let posTxt = '';
-              try {
-                const map = JSON.parse(localStorage.getItem('nce_lastpos') || '{}');
-                const lp = map[rec.id];
-                if (lp && (lp.idx >= 0 || lp.t >= 0)) {
-                  const num = parseInt(book.replace('NCE', '')) || 1;
-                  const lessonNumber = num === 1 ? `${i * 2 + 1}&${i * 2 + 2}` : String(i + 1);
-                  const tt = (lp.t >= 0) ? fmtTime(lp.t) : '';
-                  posTxt = [`第${lessonNumber}课`, tt].filter(Boolean).join(' · ');
-                }
-              } catch (_) { }
-              if (lastWrap && lastBox) {
-                lastWrap.style.display = '';
-                const href = toLessonHref(book, lesson);
-                lastBox.innerHTML = `
-                  <a class="last-seen" href="${href}" data-id="${rec.id}" id="lastSeenLink">
+            const lesson = library.find(l => l.id === rec.id);
+            let posTxt = '';
+            try {
+              const map = JSON.parse(localStorage.getItem('nce_lastpos') || '{}');
+              const lp = map[rec.id];
+              if (lp && (lp.idx >= 0 || lp.t >= 0)) {
+                posTxt = (lp.t >= 0) ? fmtTime(lp.t) : '';
+              }
+            } catch (_) { }
+            if (lastWrap && lastBox) {
+              lastWrap.style.display = '';
+              lastBox.innerHTML = `
+                  <a class="last-seen" href="${esc(lessonHref(lesson))}" data-id="${esc(rec.id)}" id="lastSeenLink">
                     <div class="lesson-content">
                       <div class="lesson-num">上次学习</div>
-                      <div class="lesson-title">${lesson.title}</div>
+                      <div class="lesson-title">${esc(lesson.title || lesson.filename)}</div>
                       ${posTxt ? `<div style="font-size:13px;color:var(--muted);margin-top:4px">${posTxt}</div>` : ''}
                     </div>
                     <div style="flex:0 0 auto;width:20px;height:20px;color:var(--text);display:flex;align-items:center;justify-content:center">→</div>
                   </a>`;
-              }
-            } else {
-              if (lastWrap && lastBox) { lastWrap.style.display = 'none'; lastBox.innerHTML = ''; }
             }
           } else {
             if (lastWrap && lastBox) { lastWrap.style.display = 'none'; lastBox.innerHTML = ''; }
           }
         } catch (_) { }
 
-        const existingGrid = container.querySelector('.lessons-grid');
-        if (existingGrid) {
-          existingGrid.innerHTML = lessons.map((l, i) => itemHTML(book, l, i, favs)).join('');
-        } else {
-          const gridDiv = document.createElement('div');
-          gridDiv.className = 'lessons-grid';
-          gridDiv.innerHTML = lessons.map((l, i) => itemHTML(book, l, i, favs)).join('');
-          container.appendChild(gridDiv);
-        }
+        if (toolbarEl) toolbarEl.hidden = !hasLessons;
+        if (emptyEl) emptyEl.hidden = hasLessons;
+        if (countEl) countEl.textContent = hasLessons ? `${library.length} 课` : '';
+        if (gridEl) gridEl.innerHTML = hasLessons ? library.map((l, i) => itemHTML(l, i, favs)).join('') : '';
       }
-      window.addEventListener('hashchange', load, { passive: true });
-      NCE_APP.initSegmented(document);
-
-      window.toggleFav = function (id) {
-        if (!id) return;
-        const favs = getFavs();
-        if (favs.has(id)) favs.delete(id); else favs.add(id);
-        saveFavs(favs);
-        if (lessonsData) {
-          render(lessonsData);
+      // 收藏切换（事件委托，避免把文件名内插进 onclick）
+      container.addEventListener('click', (e) => {
+        const favBtn = e.target.closest('.fav-btn');
+        if (favBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = favBtn.dataset.id;
+          if (!id) return;
+          const favs = getFavs();
+          if (favs.has(id)) favs.delete(id); else favs.add(id);
+          saveFavs(favs);
+          render();
           return;
         }
-        load();
-      };
-      document.addEventListener('click', (e) => {
         const a = e.target.closest('#lastSeenLink');
-        if (!a) return;
-        const id = a.dataset.id;
-        try { sessionStorage.setItem('nce_resume', id); sessionStorage.setItem('nce_resume_play', '1'); } catch (_) { }
+        if (a) {
+          const id = a.dataset.id;
+          try { sessionStorage.setItem('nce_resume', id); sessionStorage.setItem('nce_resume_play', '1'); } catch (_) { }
+        }
       });
+
+      // 资源导入（弹窗 + 拖放）
+      (function initImport() {
+        const modal = document.getElementById('importModal');
+        const statusEl = document.getElementById('importStatus');
+        const folderInput = document.getElementById('importFolderInput');
+        const filesInput = document.getElementById('importFilesInput');
+        const zipInput = document.getElementById('importZipInput');
+        if (!modal || !folderInput || !window.NCE_IMPORT) return;
+
+        function openModal() {
+          setStatus('');
+          modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+          modal.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        document.getElementById('importOpenBtn')?.addEventListener('click', openModal);
+        document.getElementById('emptyImportBtn')?.addEventListener('click', openModal);
+        document.getElementById('importClose')?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
+        });
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+        const onProgress = (d, t) => setStatus(`正在导入… ${d}/${t}`);
+        let importing = false;
+        async function run(promise) {
+          if (importing) return;
+          importing = true;
+          try {
+            setStatus('正在导入…');
+            const res = await promise;
+            const parts = [`已导入 ${res.imported} 课`];
+            if (res.skipped) parts.push(`跳过 ${res.skipped} 项`);
+            setStatus(parts.join('，'));
+            if (res.errors && res.errors.length) console.warn('导入警告：', res.errors);
+            await load();
+            if (res.imported > 0) setTimeout(closeModal, 800);
+          } catch (e) {
+            setStatus('导入失败：' + (e.message || e));
+            console.error(e);
+          } finally {
+            importing = false;
+          }
+        }
+
+        document.getElementById('importFolderBtn')?.addEventListener('click', () => folderInput.click());
+        document.getElementById('importFilesBtn')?.addEventListener('click', () => filesInput.click());
+        document.getElementById('importZipBtn')?.addEventListener('click', () => zipInput.click());
+
+        folderInput.addEventListener('change', () => {
+          if (!folderInput.files.length) return;
+          run(NCE_IMPORT.importFileList(folderInput.files, onProgress));
+          folderInput.value = '';
+        });
+        filesInput.addEventListener('change', () => {
+          if (!filesInput.files.length) return;
+          run(NCE_IMPORT.importFileList(filesInput.files, onProgress));
+          filesInput.value = '';
+        });
+        zipInput.addEventListener('change', () => {
+          if (!zipInput.files.length) return;
+          run(NCE_IMPORT.importZipFile(zipInput.files[0], onProgress));
+          zipInput.value = '';
+        });
+
+        // 空状态卡片支持直接拖放文件（mp3 / lrc / zip）
+        const emptyCard = document.getElementById('libraryEmpty');
+        if (emptyCard) {
+          ['dragenter', 'dragover'].forEach(type => emptyCard.addEventListener(type, (e) => {
+            e.preventDefault();
+            emptyCard.classList.add('dragover');
+          }));
+          ['dragleave', 'drop'].forEach(type => emptyCard.addEventListener(type, (e) => {
+            e.preventDefault();
+            emptyCard.classList.remove('dragover');
+          }));
+          emptyCard.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer?.files || []);
+            if (!files.length) return;
+            const zip = files.find(f => /\.zip$/i.test(f.name));
+            openModal();
+            if (zip) run(NCE_IMPORT.importZipFile(zip, onProgress));
+            else run(NCE_IMPORT.importFileList(files, onProgress));
+          });
+        }
+      })();
+
       load();
     });
   </script>
-
-  <style>
-    .tabs {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-      margin: 8px 0
-    }
-  </style>
 </head>
 
 <body>
@@ -340,18 +394,15 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
         </button>
+        <a href="favorites.html" class="icon-btn home-fav-link" id="favoritesLinkHome" aria-label="收藏清单">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 17.75 5.83 21l1.18-6.88L2 9.24l6.91-1L12 2l3.09 6.24 6.91 1-5.01 4.88L18.17 21z"></path>
+          </svg>
+        </a>
       </div>
-      <h1 id="bookTitle">NCE Flow</h1>
-      <p class="subtitle">简约 · 高效 · 专注</p>
-      <div class="seg-wrap">
-        <div class="segmented tabs" role="tablist" aria-label="册别">
-          <a class="seg" href="/NCE1/" data-book="NCE1">第一册</a>
-          <a class="seg" href="/NCE2/" data-book="NCE2">第二册</a>
-          <a class="seg" href="/NCE3/" data-book="NCE3">第三册</a>
-          <a class="seg" href="/NCE4/" data-book="NCE4">第四册</a>
-          <a class="seg" href="favorites.html" id="favoritesLinkHome">清单</a>
-        </div>
-      </div>
+      <h1 id="bookTitle">EchoFlow</h1>
+      <p class="subtitle">导入你的 mp3 + lrc，逐句点读、循环与跟读</p>
     </header>
 
     <!-- Search Modal -->
@@ -387,9 +438,35 @@
     </div>
     <div id="searchLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
     <main class="lessons" id="lessons">
+      <section class="library-toolbar" id="libraryToolbar" hidden>
+        <div class="library-title">
+          <h2>课程库</h2>
+          <span class="library-count" id="libraryCount"></span>
+        </div>
+        <button type="button" class="btn-quiet" id="importOpenBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          导入
+        </button>
+      </section>
       <section class="section last-seen-section" id="lastSeenWrap" style="display:none">
         <div id="lastSeen"></div>
       </section>
+      <section class="library-empty" id="libraryEmpty" hidden>
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+            <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
+        </div>
+        <h2>课程库还是空的</h2>
+        <p>导入 mp3 音频和同名 lrc 字幕，它们会变成可逐句点读的课程。<br>文件只保存在这台设备的浏览器里，不会上传。</p>
+        <button type="button" class="btn-primary" id="emptyImportBtn">导入资源</button>
+        <p class="empty-drop-hint">也可以把文件直接拖到这里</p>
+      </section>
+      <div class="lessons-grid" id="lessonsGrid"></div>
     </main>
     <footer>
       <p class="repo">
@@ -402,7 +479,7 @@
           </svg>
         </a>
       </p>
-      <p class="byline">本网站由 <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">卢振华</a> 开发与维护</p>
+      <p class="byline">本网站由 <a href="https://zhenhua.lu/" target="_blank" rel="noopener">卢振华</a> 开发与维护</p>
       <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">版本
           1.7.9</a><span id="pwaFooterInstall" class="pwa-footer-link" hidden> · <a href="#">安装应用</a></span></p>
       <div class="footer-actions">
@@ -490,7 +567,7 @@
   <div id="pwaPrompt" class="pwa-prompt">
     <img src="icons/icon-192x192.png" alt="" class="pwa-prompt-icon">
     <div class="pwa-prompt-content">
-      <span class="pwa-prompt-title">安装 NCE Flow</span>
+      <span class="pwa-prompt-title">安装 EchoFlow</span>
       <span class="pwa-prompt-sub" id="pwaPromptSub">添加到主屏幕，随时学习</span>
     </div>
     <button id="pwaInstall" class="pwa-prompt-btn">安装</button>
@@ -575,6 +652,64 @@
       window.addEventListener('appinstalled', () => { localStorage.setItem(INSTALLED_KEY, '1'); hidePrompt(); hideFooterLink(); });
     })();
   </script>
+  <!-- Import Modal -->
+  <div id="importModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card import-modal-card">
+      <button type="button" class="modal-close" id="importClose" aria-label="关闭">×</button>
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <h3 class="modal-title">导入资源</h3>
+      <p class="modal-text">选择 mp3 音频和同名 lrc 字幕，配对后成为一课。文件只保存在本机浏览器。</p>
+      <div class="import-options">
+        <button type="button" class="import-option" id="importFolderBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">选择文件夹</span>
+            <span class="import-option-hint">批量导入整个文件夹里的音频和字幕</span>
+          </span>
+        </button>
+        <button type="button" class="import-option" id="importFilesBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+              <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">选择文件</span>
+            <span class="import-option-hint">多选若干 mp3 / lrc 文件</span>
+          </span>
+        </button>
+        <button type="button" class="import-option" id="importZipBtn">
+          <span class="import-option-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8v13H3V8"></path>
+              <path d="M1 3h22v5H1z"></path>
+              <path d="M10 12h4"></path>
+            </svg>
+          </span>
+          <span class="import-option-body">
+            <span class="import-option-label">导入 zip 压缩包</span>
+            <span class="import-option-hint">解压包内的音频和字幕后导入</span>
+          </span>
+        </button>
+      </div>
+      <p class="import-modal-status" id="importStatus" aria-live="polite"></p>
+      <input type="file" id="importFolderInput" webkitdirectory directory multiple hidden>
+      <input type="file" id="importFilesInput" accept=".mp3,.m4a,.ogg,.wav,.lrc" multiple hidden>
+      <input type="file" id="importZipInput" accept=".zip" hidden>
+    </div>
+  </div>
+
   <!-- Copyright Confirmation Modal -->
   <div id="copyrightModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
@@ -583,15 +718,15 @@
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         </svg>
       </div>
-      <h3 class="modal-title">正版承诺</h3>
-      <p class="modal-text">本网站仅供新概念英语学习者辅助使用。使用本网站前，请确认您已购买正版新概念英语，拒绝任何形式的盗版书籍。</p>
+      <h3 class="modal-title">使用须知</h3>
+      <p class="modal-text">EchoFlow 是一款点读跟读<strong>工具</strong>，<strong>不提供任何教材音频或课文内容</strong>。你需要自行导入合法拥有的 mp3 音频与 lrc 字幕文件；导入的资源仅保存在你本机浏览器，不会上传。请仅导入你合法拥有的资源，拒绝任何形式的盗版。</p>
 
       <div class="modal-checkbox-wrapper">
         <input type="checkbox" id="copyrightCheck">
-        <label for="copyrightCheck">我已购买正版新概念英语书籍</label>
+        <label for="copyrightCheck">我已知晓本工具不含教材内容，且将仅导入我合法拥有的资源</label>
       </div>
 
-      <button id="copyrightConfirmBtn" class="modal-btn" disabled>进入学习</button>
+      <button id="copyrightConfirmBtn" class="modal-btn" disabled>开始使用</button>
     </div>
   </div>
 

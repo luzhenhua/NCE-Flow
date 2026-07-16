@@ -1,5 +1,5 @@
 /**
- * NCE Flow · lesson.js · iOS-Optimized Edition
+ * EchoFlow · lesson.js · iOS-Optimized Edition
  */
 
 (() => {
@@ -20,8 +20,8 @@
 
   async function fetchText(url) { const r = await fetch(url); if (!r.ok) throw new Error('Fetch failed ' + url); return await r.text(); }
 
-  async function loadLrc(url) {
-    const text = await fetchText(url);
+  // 解析 LRC 文本（数据来源无关）。返回 { meta, items }。
+  function parseLrcText(text) {
     const rows = text.replace(/\r/g, '').split('\n');
     const meta = { al: '', ar: '', ti: '', by: '' };
     const items = [];
@@ -45,6 +45,15 @@
     }
     for (let i = 0; i < items.length; i++) items[i].end = i + 1 < items.length ? items[i + 1].start : 0;
     return { meta, items };
+  }
+
+  // 从 IndexedDB（用户导入的资源）取 lrc 文本并解析。
+  async function loadLrcFromStore(book, filename) {
+    const store = window.NCE_RESOURCES;
+    if (!store) throw new Error('资源存储未就绪');
+    const rec = await store.getLesson(book, filename);
+    if (!rec || !rec.lrcText) throw new Error('NO_LRC');
+    return parseLrcText(rec.lrcText);
   }
 
   function qs(sel) { return document.querySelector(sel); }
@@ -159,8 +168,7 @@
     const base = rest.join('/');
     const inModern = /\/modern\//.test(location.pathname);
     const prefix = inModern ? '../' : '';
-    const mp3 = `${prefix}${book}/${base}.mp3`;
-    const lrc = `${prefix}${book}/${base}.lrc`;
+    // 音频与 lrc 不再来自服务器路径，改为从用户导入的 IndexedDB 资源读取（见 loadLrcFromStore / getAudioBlobUrl）。
 
     const titleEl = qs('#lessonTitle');
     const subEl = qs('#lessonSub');
@@ -1965,10 +1973,11 @@
       if (audioBlobUrl) return audioBlobUrl;
       if (audioBlobPromise) return await audioBlobPromise;
       audioBlobPromise = (async () => {
-        const r = await fetch(mp3);
-        if (!r.ok) throw new Error('Fetch audio failed: ' + r.status);
-        const blob = await r.blob();
-        audioBlobUrl = URL.createObjectURL(blob);
+        const store = window.NCE_RESOURCES;
+        if (!store) throw new Error('资源存储未就绪');
+        const rec = await store.getLesson(book, base);
+        if (!rec || !rec.audioBlob) throw new Error('NO_AUDIO');
+        audioBlobUrl = URL.createObjectURL(rec.audioBlob);
         return audioBlobUrl;
       })();
       try { return await audioBlobPromise; }
@@ -2420,20 +2429,42 @@
     });
 
     // --------------------------
-    // 邻接课程与跳转
+    // 邻接课程与跳转（基于已导入课程库，按文件名自然排序）
     // --------------------------
+    let _libraryPromise = null;
+    function getLibrary() {
+      if (_libraryPromise) return _libraryPromise;
+      _libraryPromise = (async () => {
+        if (!window.NCE_RESOURCES) return [];
+        const list = await NCE_RESOURCES.listLessons(book);
+        return list.sort((a, b) => a.filename.localeCompare(b.filename, 'zh-Hans-CN', { numeric: true }));
+      })().catch(() => []);
+      return _libraryPromise;
+    }
     async function getNextLesson(currentBook, currentFilename) {
       try {
-        const response = await fetch(prefix + 'static/data.json');
-        if (!response.ok) return null;
-        const data = await response.json();
-        const bookNum = parseInt(currentBook.replace('NCE', '')) || 1;
-        const lessons = data[bookNum] || [];
+        const lessons = await getLibrary();
         const currentIndex = lessons.findIndex(lesson => lesson.filename === currentFilename);
         if (currentIndex >= 0 && currentIndex < lessons.length - 1) return lessons[currentIndex + 1];
         return null;
       } catch (e) { console.error(e); return null; }
     }
+    let _resourceMissingShown = false;
+    function showResourceMissing(kind) {
+      if (_resourceMissingShown) return;
+      _resourceMissingShown = true;
+      const label = kind === 'audio' ? '音频' : '课文';
+      if (titleEl) titleEl.textContent = '本课资源未导入';
+      if (subEl) subEl.textContent = `缺少${label}文件`;
+      if (listEl) {
+        listEl.innerHTML =
+          '<div class="resource-missing" style="padding:32px 16px;text-align:center;color:var(--muted,#888);line-height:1.9">' +
+          '本课的音频 / 课文尚未导入。<br>本工具不提供任何教材内容，请导入你合法拥有的 mp3 + lrc 资源。<br><br>' +
+          '<a href="index.html" style="display:inline-block;background:var(--accent,#6366f1);color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-weight:600">去导入资源</a>' +
+          '</div>';
+      }
+    }
+
     function showNotification(message) {
       const n = document.createElement('div');
       n.style.cssText = `
@@ -2461,15 +2492,12 @@
           window.location.href = `lesson.html#${book}/${nextLesson.filename}`;
         }, 2000);
       } else {
-        showNotification('🎉 恭喜完成本册课程！');
+        showNotification('🎉 恭喜，课程库里的课都学完了！');
       }
     }
     async function resolveLessonNeighbors() {
       try {
-        const num = parseInt(book.replace('NCE', '')) || 1;
-        const res = await fetch(prefix + 'static/data.json');
-        const data = await res.json();
-        const lessons = data[num] || [];
+        const lessons = await getLibrary();
         const i = lessons.findIndex(x => x.filename === base);
         if (i > 0) {
           const prev = lessons[i - 1].filename;
@@ -2500,8 +2528,10 @@
 
     // 重要：iOS 上尽早设定 preload，有助于更快拿到 metadata
     try { audio.preload = 'auto'; } catch (_) { }
-    audio.src = mp3;
-    try { audio.load(); } catch (_) { }
+    // 音频来自用户导入的本地资源（IndexedDB），以 Blob URL 装载；缺失则提示导入。
+    switchToBlobSource().then((ok) => {
+      if (!ok) showResourceMissing('audio');
+    });
 
     if (window.NCE_APP && typeof NCE_APP.initSegmented === 'function') {
       try { NCE_APP.initSegmented(document); } catch (_) { }
@@ -2550,14 +2580,15 @@
       } catch (_) { }
     }
 
-    loadLrc(lrc).then(({ meta, items: arr }) => {
+    loadLrcFromStore(book, base).then(({ meta, items: arr }) => {
+      if (_resourceMissingShown) return; // 音频缺失提示已展示，保持导入引导，不渲染课文
       items = arr;
       const lessonTitle = meta.ti || base;
       titleEl.textContent = lessonTitle;
-      subEl.textContent = `${meta.al || book} · ${meta.ar || ''}`.trim();
+      subEl.textContent = `${meta.al || ''} ${meta.ar || ''}`.trim();
 
       // 更新浏览器标签页标题
-      document.title = `${lessonTitle} - NCE Flow`;
+      document.title = `${lessonTitle} - EchoFlow`;
 
       // 智能识别第一句正文的位置
       firstContentIndex = skipIntro ? findFirstContentIndex(items) : 0;
@@ -2621,8 +2652,12 @@
       sessionStorage.removeItem('nce_resume');
       sessionStorage.removeItem('nce_resume_play');
     }).catch(err => {
-      titleEl.textContent = '无法加载课文';
-      subEl.textContent = String(err);
+      if (err && err.message === 'NO_LRC') {
+        showResourceMissing('lrc');
+      } else {
+        titleEl.textContent = '无法加载课文';
+        subEl.textContent = String(err);
+      }
     });
 
     window.addEventListener('pagehide', () => { pauseForNavigation(); });

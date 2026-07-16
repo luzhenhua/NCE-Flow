@@ -10,11 +10,6 @@ services:
     volumes:
       # 服务端数据持久化与多设备同步：挂载后用户数据自动存到宿主 ./data，清缓存不丢失
       - ./data:/app/data
-      # 如果需要在运行时更新内容，可以挂载卷
-      # - ./NCE1:/usr/share/nginx/html/NCE1
-      # - ./NCE2:/usr/share/nginx/html/NCE2
-      # - ./NCE3:/usr/share/nginx/html/NCE3
-      # - ./NCE4:/usr/share/nginx/html/NCE4
     # 可选：设置访问令牌后，需在应用「设置」中填入同一令牌才能同步
     # environment:
     #   - NCE_DATA_TOKEN=change-me

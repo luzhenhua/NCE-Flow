@@ -1,12 +1,12 @@
-# NCE Flow Docker Image
+# EchoFlow Docker Image
 # 基于 OpenResty（Nginx + Lua）：静态服务照旧，并额外提供可选的 /api/userData 数据持久化接口
 FROM openresty/openresty:alpine
 
 # 设置维护者信息和标签
 LABEL maintainer="luzhenhua <luzhenhuadev@qq.com>"
-LABEL description="NCE Flow - 新概念英语学习应用"
+LABEL description="EchoFlow - 点读跟读练习工具（自备资源）"
 LABEL org.opencontainers.image.source="https://github.com/luzhenhua/NCE-Flow"
-LABEL org.opencontainers.image.description="新概念英语在线点读，点句即读、连续播放"
+LABEL org.opencontainers.image.description="点读跟读练习工具：导入你的 mp3+lrc，点句即读、连续播放"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # 复制自定义 Nginx 配置与 Lua 处理器
@@ -18,10 +18,6 @@ COPY assets /usr/share/nginx/html/assets
 COPY static /usr/share/nginx/html/static
 COPY images /usr/share/nginx/html/images
 COPY icons /usr/share/nginx/html/icons
-COPY NCE1 /usr/share/nginx/html/NCE1
-COPY NCE2 /usr/share/nginx/html/NCE2
-COPY NCE3 /usr/share/nginx/html/NCE3
-COPY NCE4 /usr/share/nginx/html/NCE4
 COPY *.html /usr/share/nginx/html/
 COPY manifest.json sw.js /usr/share/nginx/html/
 COPY robots.txt sitemap.xml /usr/share/nginx/html/

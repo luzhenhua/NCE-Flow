@@ -1,5 +1,5 @@
 /**
- * NCE Flow · utils.js · Shared pure-function utilities
+ * EchoFlow · utils.js · Shared pure-function utilities
  * UMD: browser exposes window.NCEUtils, Node.js uses module.exports
  */
 (function (root, factory) {

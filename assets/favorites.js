@@ -269,7 +269,7 @@
             </div>
             <h3>还没有收藏句子</h3>
             <p>在学习课文时，点击句子旁的 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:text-bottom"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 即可加入清单。<br>收藏后可在此进行循环播放、复读等强化训练。</p>
-            <a href="index.html#NCE1" class="empty-action-btn">去学习</a>
+            <a href="index.html" class="empty-action-btn">去学习</a>
           </div>
         `;
         return;
@@ -418,7 +418,7 @@
       backBtn.addEventListener('click', (e) => {
         e.preventDefault();
         if (history.length > 1) history.back();
-        else location.href = backBtn.getAttribute('href') || 'index.html#NCE1';
+        else location.href = backBtn.getAttribute('href') || 'index.html';
       });
     }
     if (clearListBtn) {

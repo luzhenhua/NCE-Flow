@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# NCE Flow Docker 镜像构建和推送脚本
+# EchoFlow Docker 镜像构建和推送脚本
 # 与 GitHub Actions 保持一致：使用 Buildx 构建 amd64/arm64 并直接推送。
 # 运行前请先执行 docker login，脚本会优先使用当前已登录的 Docker Hub 账号。
 # 使用方法: ./build-and-push.sh <version>
@@ -54,7 +54,7 @@ if ! docker buildx version >/dev/null 2>&1; then
     exit 1
 fi
 
-echo -e "${GREEN}开始构建并推送 NCE Flow Docker 镜像...${NC}"
+echo -e "${GREEN}开始构建并推送 EchoFlow Docker 镜像...${NC}"
 echo "版本: ${VERSION}"
 echo "平台: ${PLATFORMS}"
 echo ""
