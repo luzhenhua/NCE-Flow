@@ -38,9 +38,9 @@ if [ $# -lt 1 ] || [ -z "${1:-}" ]; then
 fi
 
 VERSION=$1
-IMAGE_NAME=${IMAGE_NAME:-nce-flow}
+IMAGE_NAME=${IMAGE_NAME:-echo-flow}
 PLATFORMS=${PLATFORMS:-linux/amd64,linux/arm64}
-BUILDER_NAME=${BUILDER_NAME:-nce-flow-multiarch}
+BUILDER_NAME=${BUILDER_NAME:-echo-flow-multiarch}
 
 require_command docker
 

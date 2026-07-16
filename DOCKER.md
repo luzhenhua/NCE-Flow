@@ -14,10 +14,10 @@
 
 ```bash
 docker run -d \
-  --name nce-flow \
+  --name echo-flow \
   -p 8080:80 \
   --restart unless-stopped \
-  luzhenhua/nce-flow:latest
+  luzhenhua/echo-flow:latest
 ```
 
 然后访问 `http://localhost:8080` 即可使用。
@@ -25,12 +25,12 @@ docker run -d \
 **自定义端口示例：**
 ```bash
 # 使用 3000 端口
-docker run -d --name nce-flow -p 3000:80 --restart unless-stopped luzhenhua/nce-flow:latest
+docker run -d --name echo-flow -p 3000:80 --restart unless-stopped luzhenhua/echo-flow:latest
 ```
 
 **指定版本：**
 ```bash
-docker run -d --name nce-flow -p 8080:80 --restart unless-stopped luzhenhua/nce-flow:1.6.0
+docker run -d --name echo-flow -p 8080:80 --restart unless-stopped luzhenhua/echo-flow:latest
 ```
 
 ## 其他部署方式
@@ -41,8 +41,8 @@ docker run -d --name nce-flow -p 8080:80 --restart unless-stopped luzhenhua/nce-
 
 1. 克隆项目到本地：
 ```bash
-git clone https://github.com/luzhenhua/NCE-Flow.git
-cd NCE-Flow
+git clone https://github.com/luzhenhua/echo-flow.git
+cd echo-flow
 ```
 
 2. 启动服务：
@@ -64,16 +64,16 @@ docker-compose down
 
 1. 构建镜像：
 ```bash
-docker build -t nce-flow:latest .
+docker build -t echo-flow:latest .
 ```
 
 2. 运行容器：
 ```bash
 docker run -d \
-  --name nce-flow \
+  --name echo-flow \
   -p 8080:80 \
   --restart unless-stopped \
-  nce-flow:latest
+  echo-flow:latest
 ```
 
 3. 访问应用：
@@ -81,8 +81,8 @@ docker run -d \
 
 4. 停止容器：
 ```bash
-docker stop nce-flow
-docker rm nce-flow
+docker stop echo-flow
+docker rm echo-flow
 ```
 
 ## 配置说明
@@ -134,7 +134,7 @@ docker-compose logs -f
 或
 
 ```bash
-docker logs -f nce-flow
+docker logs -f echo-flow
 ```
 
 ### 重启容器
@@ -195,7 +195,7 @@ server {
 
 ```yaml
 services:
-  nce-flow:
+  echo-flow:
     # ... 其他配置
     deploy:
       resources:
@@ -213,7 +213,7 @@ services:
 
 ```yaml
 services:
-  nce-flow:
+  echo-flow:
     # ... 其他配置
     logging:
       driver: "json-file"
@@ -253,7 +253,7 @@ sudo ufw allow 8080
 
 1. 检查容器资源使用情况：
 ```bash
-docker stats nce-flow
+docker stats echo-flow
 ```
 
 2. 如果内存或 CPU 使用过高，考虑增加资源限制
@@ -267,10 +267,10 @@ docker stats nce-flow
 docker-compose down
 
 # 删除镜像
-docker rmi nce-flow:latest
+docker rmi echo-flow:latest
 
 # 删除网络（如果不再使用）
-docker network rm nce-network
+docker network rm echo-network
 ```
 
 ## 技术栈
@@ -281,4 +281,4 @@ docker network rm nce-network
 
 ## 支持
 
-如有问题或建议，请在 [GitHub Issues](https://github.com/luzhenhua/NCE-Flow/issues) 提交。
+如有问题或建议，请在 [GitHub Issues](https://github.com/luzhenhua/echo-flow/issues) 提交。

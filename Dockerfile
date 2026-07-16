@@ -5,7 +5,7 @@ FROM openresty/openresty:alpine
 # 设置维护者信息和标签
 LABEL maintainer="luzhenhua <luzhenhuadev@qq.com>"
 LABEL description="EchoFlow - 点读跟读练习工具（自备资源）"
-LABEL org.opencontainers.image.source="https://github.com/luzhenhua/NCE-Flow"
+LABEL org.opencontainers.image.source="https://github.com/luzhenhua/echo-flow"
 LABEL org.opencontainers.image.description="点读跟读练习工具：导入你的 mp3+lrc，点句即读、连续播放"
 LABEL org.opencontainers.image.licenses="MIT"
 

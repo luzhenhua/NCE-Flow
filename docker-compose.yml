@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  nce-flow:
+  echo-flow:
     build: .
-    container_name: nce-flow
+    container_name: echo-flow
     ports:
       - "8080:80"
     restart: unless-stopped
@@ -20,8 +20,8 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - nce-network
+      - echo-network
 
 networks:
-  nce-network:
+  echo-network:
     driver: bridge

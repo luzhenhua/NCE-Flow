@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           TAG="${{ inputs.tag }}"
           VER="${{ inputs.version }}"
-          git archive --format=tar.gz --prefix="NCE-Flow-${VER}/" "${TAG}" -o "${VER}.tar.gz"
+          git archive --format=tar.gz --prefix="echo-flow-${VER}/" "${TAG}" -o "${VER}.tar.gz"
           ls -lh "${VER}.tar.gz"
 
       - name: Upload to release

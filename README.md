@@ -2,12 +2,12 @@
 
 **点读跟读练习工具 · 导入你自己的 mp3+lrc，点句即读、连续播放**
 
-[![GitHub stars](https://img.shields.io/github/stars/luzhenhua/NCE-Flow?style=social)](https://github.com/luzhenhua/NCE-Flow)
-[![GitHub forks](https://img.shields.io/github/forks/luzhenhua/NCE-Flow?style=social)](https://github.com/luzhenhua/NCE-Flow)
-[![GitHub release](https://img.shields.io/github/release/luzhenhua/NCE-Flow)](https://github.com/luzhenhua/NCE-Flow/releases)
-[![License](https://img.shields.io/github/license/luzhenhua/NCE-Flow)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/luzhenhua/echo-flow?style=social)](https://github.com/luzhenhua/echo-flow)
+[![GitHub forks](https://img.shields.io/github/forks/luzhenhua/echo-flow?style=social)](https://github.com/luzhenhua/echo-flow)
+[![GitHub release](https://img.shields.io/github/release/luzhenhua/echo-flow)](https://github.com/luzhenhua/echo-flow/releases)
+[![License](https://img.shields.io/github/license/luzhenhua/echo-flow)](LICENSE)
 
-**在线体验**: https://nce.zhenhua.lu
+**在线体验**: https://echoflow.zhenhua.lu
 
 > ⚠️ **本工具不提供任何教材音频或课文内容。** 音频（mp3）与字幕（lrc）需由你自行导入合法拥有的资源，导入的文件仅保存在你本机浏览器（IndexedDB），不会上传服务器。
 
@@ -29,14 +29,14 @@
 只需一条命令，无需下载代码：
 
 ```bash
-docker run -d -p 8080:80 --name nce-flow --restart unless-stopped luzhenhua/nce-flow:latest
+docker run -d -p 8080:80 --name echo-flow --restart unless-stopped luzhenhua/echo-flow:latest
 ```
 
 然后访问 `http://localhost:8080` 即可！
 
 **自定义端口：**
 ```bash
-docker run -d -p 3000:80 --name nce-flow --restart unless-stopped luzhenhua/nce-flow:latest
+docker run -d -p 3000:80 --name echo-flow --restart unless-stopped luzhenhua/echo-flow:latest
 ```
 
 详细的 Docker 部署说明请查看 [DOCKER.md](DOCKER.md)
@@ -47,8 +47,8 @@ docker run -d -p 3000:80 --name nce-flow --restart unless-stopped luzhenhua/nce-
 
 ```bash
 # 克隆项目
-git clone https://github.com/luzhenhua/NCE-Flow.git
-cd NCE-Flow
+git clone https://github.com/luzhenhua/echo-flow.git
+cd echo-flow
 
 # 启动服务
 docker-compose up -d
@@ -58,7 +58,7 @@ docker-compose up -d
 
 ### 方式三：本地开发服务器
 
-1. **下载源码**：`git clone https://github.com/luzhenhua/NCE-Flow.git`（或从仓库页面下载 zip）
+1. **下载源码**：`git clone https://github.com/luzhenhua/echo-flow.git`（或从仓库页面下载 zip）
 2. 启动本地服务器：
 
    **方法一：使用Python**
@@ -87,7 +87,7 @@ docker-compose up -d
 ## 项目结构
 
 ```
-NCE-Flow/            # 仓库名沿用旧名，站点品牌为 EchoFlow
+echo-flow/           # 站点品牌与仓库名均为 EchoFlow
 ├── assets/          # 样式与脚本（含资源导入与 IndexedDB 存储）
 ├── index.html       # 首页（课程库 + 资源导入）
 ├── lesson.html      # 点读页
@@ -96,7 +96,7 @@ NCE-Flow/            # 仓库名沿用旧名，站点品牌为 EchoFlow
 
 ## 版本历史
 
-查看完整更新日志：[Releases](https://github.com/luzhenhua/NCE-Flow/releases)
+查看完整更新日志：[Releases](https://github.com/luzhenhua/echo-flow/releases)
 
 ### 最新版本
 
@@ -149,7 +149,7 @@ NCE-Flow/            # 仓库名沿用旧名，站点品牌为 EchoFlow
 
 感谢以下项目和个人的贡献：
 
-- **[@reaishijie](https://github.com/reaishijie)** - 提交了 [PR #3](https://github.com/luzhenhua/NCE-Flow/pull/3)，为课文页面增加了播放速度控制按钮及播放速度持久化功能
+- **[@reaishijie](https://github.com/reaishijie)** - 提交了 [PR #3](https://github.com/luzhenhua/echo-flow/pull/3)，为课文页面增加了播放速度控制按钮及播放速度持久化功能
 
 感谢所有为本项目点赞、提出建议和反馈的朋友们！
 

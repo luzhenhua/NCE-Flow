@@ -8,7 +8,7 @@ on:
 
 env:
   DOCKER_USERNAME: luzhenhua
-  IMAGE_NAME: nce-flow
+  IMAGE_NAME: echo-flow
 
 jobs:
   build-and-push:
